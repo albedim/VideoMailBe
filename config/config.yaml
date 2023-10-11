@@ -1,0 +1,9 @@
+datasources:
+    - name: local
+      user: videoMail
+      password: videoMail2023!
+      host: localhost
+      port: 3306
+      db: videoMail
+
+
