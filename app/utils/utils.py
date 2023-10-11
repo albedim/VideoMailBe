@@ -1,7 +1,14 @@
+import hashlib
+from datetime import datetime
+
 import yaml
 import string
 import random
 import uuid
+
+from starlette.responses import JSONResponse
+
+from app.utils.errors.GException import GException
 
 
 def getConnectionParameters(datasource):
@@ -23,3 +30,28 @@ def generatePinCode(size=6, chars=string.digits) :
 
 def generateUuid(size=8) :
     return str(uuid.uuid4())[:size]
+
+
+def hashString(password: str):
+    return hashlib.md5(password.encode('UTF-8')).hexdigest()
+
+
+def createSuccessResponse(param):
+    return JSONResponse({
+        "date": str(datetime.now()),
+        "success": True,
+        "param": param,
+        "code": 200,
+    }, 200)
+
+
+def createErrorResponse(error):
+    return JSONResponse({
+        "date": str(datetime.now()),
+        "success": False,
+        "error": {
+            "message": error.message,
+            "path": error.__module__
+        },
+        "code": error.code,
+    }, error.code)

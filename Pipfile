@@ -5,6 +5,8 @@ name = "pypi"
 
 [packages]
 uvicorn = {extras = ["standard"], version = "*"}
+typing-extensions = "*"
+fastapi = "*"
 
 [dev-packages]
 
