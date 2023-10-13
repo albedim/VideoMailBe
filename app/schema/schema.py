@@ -3,6 +3,8 @@ from pydantic import BaseModel
 
 class UserAuthSchema(BaseModel):
     code: str
+    name: str
+    surname: str
 
 
 class UserRefreshSchema(BaseModel):

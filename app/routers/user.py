@@ -1,6 +1,4 @@
 from fastapi import APIRouter
-from pydantic import BaseModel
-
 from app.schema.schema import UserAuthSchema, UserRefreshSchema
 from app.services.user import UserService
 
