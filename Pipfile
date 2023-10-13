@@ -7,6 +7,9 @@ name = "pypi"
 uvicorn = {extras = ["standard"], version = "*"}
 typing-extensions = "*"
 fastapi = "*"
+oauth2client = "*"
+google-api-python-client = "*"
+google-auth-oauthlib = "*"
 
 [dev-packages]
 

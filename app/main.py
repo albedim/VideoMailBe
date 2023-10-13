@@ -2,7 +2,6 @@ from http.client import HTTPException
 
 import uvicorn
 from fastapi import FastAPI
-from fastapi.exceptions import RequestValidationError
 
 from app.routers.videoMail import videoMailRouter
 from app.utils.errors.MethodNotAllowedException import MethodNotAllowedException
