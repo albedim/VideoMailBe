@@ -13,6 +13,7 @@ google-auth-oauthlib = "*"
 mysqlclient = "*"
 sqlalchemy = "*"
 pyjwt = "*"
+python-decouple = "*"
 
 [dev-packages]
 

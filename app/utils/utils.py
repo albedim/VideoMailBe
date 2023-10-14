@@ -45,6 +45,15 @@ def createSuccessResponse(param):
     }
 
 
+def getClient():
+    with open('../config/config.yaml', 'r') as f:
+        data = yaml.load(f, Loader=yaml.FullLoader)
+        return {
+            'client_id': data['client']['client_id'],
+            'client_secret': data['client']['client_secret']
+        }
+
+
 def createErrorResponse(error):
     return JSONResponse({
         "date": str(datetime.now()),

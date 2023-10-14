@@ -2,9 +2,10 @@ import jwt
 import requests
 from google.oauth2 import id_token
 
+from app.model.entity.user import User
 from app.model.repository.user import UserRepository
 from app.utils.errors.RefreshTokenNeededExceptiom import RefreshTokenNeededException
-from app.utils.utils import createSuccessResponse, createErrorResponse
+from app.utils.utils import createSuccessResponse, createErrorResponse, getClient
 
 
 class UserService:
@@ -16,8 +17,8 @@ class UserService:
         # dal codice ricevuto dal frontend
 
         res = requests.post("https://oauth2.googleapis.com/token", json={
-            "client_id": "651229141185-egfqcebnr2a5bdll5r04lfrg1t03fms1.apps.googleusercontent.com",
-            "client_secret": "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",
+            "client_id": getClient()['client_id'],
+            "client_secret": getClient()['client_secret'],
             "code": request.code.replace("%", "/"),
             "grant_type": "authorization_code",
             "redirect_uri": "http://localhost:3000"
@@ -44,17 +45,29 @@ class UserService:
             })
         else:
             userInformation = requests.get("https://oauth2.googleapis.com/tokeninfo?id_token="+res['id_token']).json()
-            createdUser = UserRepository.create(True, request.name, request.surname, userInformation['email'], request.code, res['access_token'])
+            createdUser = UserRepository.create(
+                True,
+                request.name,
+                request.surname,
+                userInformation['email'],
+                request.code,
+                res['access_token']
+            )
             return createSuccessResponse({
                 'user': createdUser.toJSON(),
                 'new': True
             })
 
     @classmethod
-    def refreshToken(cls, user, refreshToken, only_access_token=True):
+    def refreshToken(
+            cls,
+            user: User,
+            refreshToken: str,
+            only_access_token=True
+    ):
         res = requests.post("https://oauth2.googleapis.com/token", json={
-            "client_id": "651229141185-egfqcebnr2a5bdll5r04lfrg1t03fms1.apps.googleusercontent.com",
-            "client_secret": "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",
+            "client_id": getClient()['client_id'],
+            "client_secret": getClient()['client_secret'],
             "refresh_token": refreshToken,
             "grant_type": "refresh_token",
             "redirect_uri": "http://localhost:3000"
