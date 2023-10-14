@@ -48,13 +48,13 @@ class VideoMailService:
 
                 encoded_mail = base64.urlsafe_b64encode(
                     bytes(
-                        f"Content-Type: text/html; charset=\"UTF-8\"\n" +  # Specify HTML content type
+                        f"Content-Type: text/html; charset=\"UTF-8\"\n" +
                         "MIME-Version: 1.0\n" +
-                        "Content-Transfer-Encoding: base64\n" +  # Use base64 encoding
+                        "Content-Transfer-Encoding: base64\n" +
                         "to: "+receiver+"\n" +
                         "from: "+user.email+"\n" +
                         "subject: Subject Text\n\n" +
-                        f"{base64.b64encode(html_content.encode()).decode('utf-8')}", 'utf-8'  # Encode HTML content
+                        f"{base64.b64encode(html_content.encode()).decode('utf-8')}", 'utf-8'
                     )
                 ).decode('utf-8')
 
@@ -69,14 +69,18 @@ class VideoMailService:
                     }
                 )
 
-                if response.status_code != 200:
+                if response.status_code == 200:
+                    receivers.append(receiver)
+
+            if len(receivers) != len(request.receiver_emails):
+                if len(receivers) > 0:
                     return createSuccessResponse({
                         'message': 'Email only sent to some of the receivers',
                         'receivers': receivers,
                         'errors': True
                     })
                 else:
-                    receivers.append(receiver)
+                    raise EmailNotSentException()
 
             return createSuccessResponse({
                 'message': 'Email successfully sent',
@@ -86,5 +90,7 @@ class VideoMailService:
 
         except UserNotFoundException as exc:
             return createErrorResponse(UserNotFoundException)
+        except EmailNotSentException as exc:
+            return createErrorResponse(EmailNotSentException)
         except Exception as exc:
             return createErrorResponse(GException)
