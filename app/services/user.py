@@ -44,14 +44,14 @@ class UserService:
             })
         else:
             userInformation = requests.get("https://oauth2.googleapis.com/tokeninfo?id_token="+res['id_token']).json()
-            createdUser = UserRepository.create(request.name, request.surname, userInformation['email'], request.code, res['access_token'])
+            createdUser = UserRepository.create(True, request.name, request.surname, userInformation['email'], request.code, res['access_token'])
             return createSuccessResponse({
                 'user': createdUser.toJSON(),
                 'new': True
             })
 
     @classmethod
-    def refreshToken(cls, refreshToken, only_access_token=True):
+    def refreshToken(cls, user, refreshToken, only_access_token=True):
         res = requests.post("https://oauth2.googleapis.com/token", json={
             "client_id": "651229141185-egfqcebnr2a5bdll5r04lfrg1t03fms1.apps.googleusercontent.com",
             "client_secret": "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",
@@ -60,6 +60,7 @@ class UserService:
             "redirect_uri": "http://localhost:3000"
         }).json()
 
+        UserRepository.refreshToken(user, res['access_token'])
         if only_access_token:
             return res['access_token']
         return res

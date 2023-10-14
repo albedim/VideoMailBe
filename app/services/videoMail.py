@@ -20,7 +20,6 @@ class VideoMailService:
             if user is None:
                 raise UserNotFoundException()
 
-            access_token = UserService.refreshToken(user.refresh_token)
             html_content = '''
                 <html>
                     <body>
@@ -44,7 +43,7 @@ class VideoMailService:
 
                 userReceiver = UserRepository.getUserByEmail(receiver)
                 if userReceiver is None:
-                    userReceiver = UserRepository.create(None, None, receiver, None, None)
+                    userReceiver = UserRepository.create(False, None, None, receiver, None, None)
 
                 encoded_mail = base64.urlsafe_b64encode(
                     bytes(
@@ -58,6 +57,7 @@ class VideoMailService:
                     )
                 ).decode('utf-8')
 
+                access_token = UserService.refreshToken(user, user.refresh_token)
                 response = requests.post(
                     'https://www.googleapis.com/gmail/v1/users/me/messages/send',
                     headers={
