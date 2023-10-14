@@ -13,6 +13,7 @@ from app.services.user import UserService
 from app.utils.errors.EmailNotSentException import EmailNotSentException
 from app.utils.errors.FileNotFoundEcxeption import FileNotFoundException
 from app.utils.errors.GException import GException
+from app.utils.errors.UnAuthotizedException import UnAuthorizedException
 from app.utils.errors.UserNotFoundException import UserNotFoundException
 from app.utils.utils import createSuccessResponse, createErrorResponse, generateUuid, getFormattedDateTime
 
@@ -24,8 +25,11 @@ class VideoMailService:
 
         try:
             user = UserRepository.getUserById(request.user_id)
+
             if user is None:
                 raise UserNotFoundException()
+            if not user.completed:
+                raise UnAuthorizedException()
 
             videoName = getFormattedDateTime()
             videoPath = "files/videomails/"+videoName+".mp4"
@@ -55,7 +59,7 @@ class VideoMailService:
 
                 userReceiver = UserRepository.getUserByEmail(receiver)
                 if userReceiver is None:
-                    userReceiver = UserRepository.create(False, None, None, receiver, None)
+                    userReceiver = UserRepository.create(False, receiver, None)
 
                 encoded_mail = base64.urlsafe_b64encode(
                     bytes(

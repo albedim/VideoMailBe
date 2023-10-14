@@ -4,8 +4,12 @@ from google.oauth2 import id_token
 
 from app.model.entity.user import User
 from app.model.repository.user import UserRepository
+from app.utils.errors.GException import GException
 from app.utils.errors.RefreshTokenNeededExceptiom import RefreshTokenNeededException
-from app.utils.utils import createSuccessResponse, createErrorResponse, getClient
+from app.utils.errors.UnAuthotizedException import UnAuthorizedException
+from app.utils.errors.UserNotCompletedException import UserNotCompletedException
+from app.utils.errors.UserNotFoundException import UserNotFoundException
+from app.utils.utils import createSuccessResponse, createErrorResponse, getClient, hashString
 
 
 class UserService:
@@ -28,33 +32,49 @@ class UserService:
         # e se vuole riloggare deve usare un refresh_token
 
         if 'error' in res and res['error'] == 'invalid_grant':
-            res = cls.refreshToken(request.code, only_access_token=False)
+            return createErrorResponse(UnAuthorizedException)
 
-            # in caso di errore vuol dire che l'utente continua a passare
-            # un codice al posto di un refresh_token
+        userInformation = requests.get("https://oauth2.googleapis.com/tokeninfo?id_token="+res['id_token']).json()
+        createdUser = UserRepository.create(True, userInformation['email'], res['refresh_token'])
+        return createSuccessResponse({
+            'complete_account_code': createdUser.completion_link
+        })
 
-            if 'error' in res and res['error'] == 'invalid_grant':
-                return createErrorResponse(RefreshTokenNeededException), RefreshTokenNeededException.code
+    @classmethod
+    def signin(cls, request):
+        try:
+            user = UserRepository.signin(request.email, hashString(request.password))
 
-            userInformation = requests.get("https://oauth2.googleapis.com/tokeninfo?id_token="+res['id_token']).json()
-            user = UserRepository.getUserByEmail(userInformation['email'])
-            return createSuccessResponse({
-                'user': user.toJSON(),
-                'new': False
-            })
-        else:
-            userInformation = requests.get("https://oauth2.googleapis.com/tokeninfo?id_token="+res['id_token']).json()
-            createdUser = UserRepository.create(
-                True,
-                request.name,
-                request.surname,
-                userInformation['email'],
-                res['refresh_token']
-            )
-            return createSuccessResponse({
-                'user': createdUser.toJSON(),
-                'new': True
-            })
+            if user is None:
+                raise UserNotFoundException()
+            if not user.completed:
+                raise UserNotCompletedException()
+
+            return createSuccessResponse(user.toJSON())
+
+        except UserNotFoundException as exc:
+            return createErrorResponse(UserNotFoundException)
+        except UserNotCompletedException as exc:
+            return createErrorResponse(UserNotCompletedException)
+        except Exception as exc:
+            return createErrorResponse(GException)
+
+    @classmethod
+    def completeUser(cls, request):
+        try:
+            user = UserRepository.getUserByCompletionLink(request.completion_link)
+
+            if user is None:
+                raise UserNotFoundException()
+            user = UserRepository.completeUser(request.name, request.surname, hashString(request.password), user)
+            return createSuccessResponse(user.toJSON())
+
+        except UserNotFoundException as exc:
+            return createErrorResponse(UserNotFoundException)
+        except UnAuthorizedException as exc:
+            return createErrorResponse(UnAuthorizedException)
+        except Exception as exc:
+            return createErrorResponse(GException)
 
     @classmethod
     def refreshToken(

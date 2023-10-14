@@ -3,8 +3,6 @@ from pydantic import BaseModel
 
 class UserAuthSchema(BaseModel):
     code: str
-    name: str
-    surname: str
 
 
 class UserRefreshSchema(BaseModel):
@@ -16,3 +14,15 @@ class EmailSentSchema(BaseModel):
     receiver_emails: list[str]
     user_id: str
     subject: str
+
+
+class UserCompleteSchema(BaseModel):
+    name: str
+    surname: str
+    password: str
+    completion_link: str
+
+
+class UserSigninSchema(BaseModel):
+    email: str
+    password: str
