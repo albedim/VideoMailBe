@@ -5,8 +5,8 @@ from app.model.entity.user import User
 class UserRepository:
 
     @classmethod
-    def create(cls, registered, name, surname, email, refreshToken, accessToken):
-        user: User = User(registered, name, surname, email, refreshToken, accessToken)
+    def create(cls, registered, name, surname, email, refreshToken):
+        user: User = User(registered, name, surname, email, refreshToken)
         sql.add(user)
         sql.commit()
         return user

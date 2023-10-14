@@ -12,17 +12,15 @@ class User(Base):
     registered: bool = Column(Boolean, nullable=False)
     surname: str = Column(String(34), nullable=True)
     email: str = Column(String(43), nullable=False)
-    access_token: str = Column(String(140), nullable=True)
     refresh_token: str = Column(String(140), nullable=True)
     created_on: datetime.date = Column(Date, nullable=False)
 
-    def __init__(self, registered, name, surname, email, refreshToken, accessToken):
+    def __init__(self, registered, name, surname, email, refreshToken):
         self.user_id = generateUuid()
         self.email = email
         self.surname = surname
         self.registered = registered
         self.name = name
-        self.access_token = accessToken
         self.refresh_token = refreshToken
         self.created_on = datetime.date.today()
 
@@ -33,7 +31,6 @@ class User(Base):
             'registered': self.registered,
             'surname': self.surname,
             'email': self.email,
-            'access_token': self.access_token,
             'refresh_token': self.refresh_token,
             'created_on': str(self.created_on),
         }

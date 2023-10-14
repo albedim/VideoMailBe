@@ -38,9 +38,8 @@ class UserService:
 
             userInformation = requests.get("https://oauth2.googleapis.com/tokeninfo?id_token="+res['id_token']).json()
             user = UserRepository.getUserByEmail(userInformation['email'])
-            updatedUser = UserRepository.refreshToken(user, res['access_token'])
             return createSuccessResponse({
-                'user': updatedUser.toJSON(),
+                'user': user.toJSON(),
                 'new': False
             })
         else:
@@ -50,8 +49,7 @@ class UserService:
                 request.name,
                 request.surname,
                 userInformation['email'],
-                request.code,
-                res['access_token']
+                res['refresh_token']
             )
             return createSuccessResponse({
                 'user': createdUser.toJSON(),
@@ -61,7 +59,6 @@ class UserService:
     @classmethod
     def refreshToken(
             cls,
-            user: User,
             refreshToken: str,
             only_access_token=True
     ):
@@ -73,7 +70,6 @@ class UserService:
             "redirect_uri": "http://localhost:3000"
         }).json()
 
-        UserRepository.refreshToken(user, res['access_token'])
         if only_access_token:
             return res['access_token']
         return res
