@@ -1,13 +1,20 @@
+import datetime
+import os.path
+
+import cv2
 import requests
 import base64
+
+from starlette.responses import FileResponse
 
 from app.model.repository.user import UserRepository
 from app.schema.schema import EmailSentSchema
 from app.services.user import UserService
 from app.utils.errors.EmailNotSentException import EmailNotSentException
+from app.utils.errors.FileNotFoundEcxeption import FileNotFoundException
 from app.utils.errors.GException import GException
 from app.utils.errors.UserNotFoundException import UserNotFoundException
-from app.utils.utils import createSuccessResponse, createErrorResponse
+from app.utils.utils import createSuccessResponse, createErrorResponse, generateUuid, getFormattedDateTime
 
 
 class VideoMailService:
@@ -20,17 +27,22 @@ class VideoMailService:
             if user is None:
                 raise UserNotFoundException()
 
+            videoName = getFormattedDateTime()
+            videoPath = "files/videomails/"+videoName+".mp4"
+            cls.saveFile(request.video, videoPath)
+            cls.extractVideoCover(videoPath)
+
             html_content = '''
                 <html>
                     <body>
                         <h1>Your Video Email</h1>
                         <p>Video-email #334 by Alberto Di Maio</p>
                         <video width="320" height="240" controls>
-                            <source src="'''+request.video_path+'''" type="video/mp4">
+                            <source src="http://localhost:8000/videoMails/''' + videoName + '''.mp4" type="video/mp4">
                             <div>
                                 <p>Il tuo client non è supportato, perciò dovrai scaricare l'app per vedere il video-email</p>
-                                <a href="'''+request.video_url+'''">
-                                    <img src="'''+request.image_path+'''">
+                                <a href="http://localhost:3000/videoMails/#343535">
+                                    <img src="http://localhost:8000/videoMails/covers''' + videoName + '''.jpeg">
                                 </a>
                             </div>
                         </video>
@@ -50,9 +62,9 @@ class VideoMailService:
                         f"Content-Type: text/html; charset=\"UTF-8\"\n" +
                         "MIME-Version: 1.0\n" +
                         "Content-Transfer-Encoding: base64\n" +
-                        "to: "+receiver+"\n" +
-                        "from: "+user.email+"\n" +
-                        "subject: Subject Text\n\n" +
+                        "to: " + receiver + "\n" +
+                        "from: " + user.email + "\n" +
+                        "subject: " + request.subject + "\n\n" +
                         f"{base64.b64encode(html_content.encode()).decode('utf-8')}", 'utf-8'
                     )
                 ).decode('utf-8')
@@ -94,3 +106,45 @@ class VideoMailService:
             return createErrorResponse(EmailNotSentException)
         except Exception as exc:
             return createErrorResponse(GException)
+
+    @classmethod
+    def getVideoFile(cls, videoName):
+        if os.path.exists(os.path.join(os.getcwd(), "files/videomails/" + videoName)):
+            return FileResponse(os.path.join(os.getcwd(), "files/videomails/" + videoName),
+                                media_type='video/mp4')
+        else:
+            return createErrorResponse(FileNotFoundException)
+
+    @classmethod
+    def getCoverFile(cls, videoName):
+        if os.path.exists("files/covers/" + videoName):
+            return FileResponse("files/covers/" + videoName,
+                                media_type='image/png')
+        else:
+            return createErrorResponse(FileNotFoundException)
+
+    @classmethod
+    def saveFile(cls, base64Data, filePath):
+        try:
+            decoded_data = base64.b64decode(base64Data)
+            with open(filePath, 'wb') as file:
+                file.write(decoded_data)
+            return True
+        except Exception as exc:
+            print(exc)
+            return False
+
+    @classmethod
+    def extractVideoCover(cls, videoPath):
+        try:
+            count = 0
+            vidcap = cv2.VideoCapture(videoPath)
+            success, image = vidcap.read()
+            success = True
+            vidcap.set(cv2.CAP_PROP_POS_MSEC, (count * 1000))
+            success, image = vidcap.read()
+            cv2.imwrite(videoPath.replace("videomails", "covers").replace("mp4", "jpeg"),
+                        image)  # save frame as JPEG file
+        except Exception as e:
+            print(e)
+            return False

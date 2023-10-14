@@ -12,8 +12,7 @@ class UserRefreshSchema(BaseModel):
 
 
 class EmailSentSchema(BaseModel):
-    video_path: str
-    video_url: str
-    image_path: str
+    video: str
     receiver_emails: list[str]
     user_id: str
+    subject: str

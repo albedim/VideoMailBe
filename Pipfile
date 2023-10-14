@@ -14,6 +14,9 @@ mysqlclient = "*"
 sqlalchemy = "*"
 pyjwt = "*"
 python-decouple = "*"
+opencv-python = "*"
+pip = "*"
+moviepy = "*"
 
 [dev-packages]
 
