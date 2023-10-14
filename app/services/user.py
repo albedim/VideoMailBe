@@ -10,12 +10,10 @@ from app.utils.utils import createSuccessResponse, createErrorResponse
 class UserService:
 
     @classmethod
-    def create(cls, request):
-        UserRepository.create("aa", "asfsa", "sgas", "sgas", "sgsa")
-        return createSuccessResponse("aa")
-
-    @classmethod
     def auth(cls, request):
+
+        # chiamati api (oauth2) per ricevere un access_token e un refresh_token
+        # dal codice ricevuto dal frontend
 
         res = requests.post("https://oauth2.googleapis.com/token", json={
             "client_id": "651229141185-egfqcebnr2a5bdll5r04lfrg1t03fms1.apps.googleusercontent.com",
@@ -24,21 +22,20 @@ class UserService:
             "grant_type": "authorization_code",
             "redirect_uri": "http://localhost:3000"
         }).json()
-        print(res)
+
+        # in caso di errore vuol dire che l'utente ha già usato un codice
+        # e se vuole riloggare deve usare un refresh_token
+
         if 'error' in res and res['error'] == 'invalid_grant':
-            res = requests.post("https://oauth2.googleapis.com/token", json={
-                "client_id": "651229141185-egfqcebnr2a5bdll5r04lfrg1t03fms1.apps.googleusercontent.com",
-                "client_secret": "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",
-                "refresh_token": request.code,
-                "grant_type": "refresh_token",
-                "redirect_uri": "http://localhost:3000"
-            }).json()
+            res = cls.refreshToken(request.code, only_access_token=False)
+
+            # in caso di errore vuol dire che l'utente continua a passare
+            # un codice al posto di un refresh_token
 
             if 'error' in res and res['error'] == 'invalid_grant':
                 return createErrorResponse(RefreshTokenNeededException), RefreshTokenNeededException.code
 
             userInformation = requests.get("https://oauth2.googleapis.com/tokeninfo?id_token="+res['id_token']).json()
-            print(userInformation)
             user = UserRepository.getUserByEmail(userInformation['email'])
             updatedUser = UserRepository.refreshToken(user, res['access_token'])
             return createSuccessResponse({
@@ -47,7 +44,6 @@ class UserService:
             })
         else:
             userInformation = requests.get("https://oauth2.googleapis.com/tokeninfo?id_token="+res['id_token']).json()
-            print(userInformation)
             createdUser = UserRepository.create(request.name, request.surname, userInformation['email'], request.code, res['access_token'])
             return createSuccessResponse({
                 'user': createdUser.toJSON(),
@@ -55,13 +51,15 @@ class UserService:
             })
 
     @classmethod
-    def refresh(cls, request):
-        # ... salvare utente nel database
+    def refreshToken(cls, refreshToken, only_access_token=True):
         res = requests.post("https://oauth2.googleapis.com/token", json={
             "client_id": "651229141185-egfqcebnr2a5bdll5r04lfrg1t03fms1.apps.googleusercontent.com",
             "client_secret": "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",
-            "refresh_token": request.refresh_token,
+            "refresh_token": refreshToken,
             "grant_type": "refresh_token",
             "redirect_uri": "http://localhost:3000"
         }).json()
-        return createSuccessResponse(res)
+
+        if only_access_token:
+            return res['access_token']
+        return res

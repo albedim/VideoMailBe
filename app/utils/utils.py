@@ -37,12 +37,12 @@ def hashString(password: str):
 
 
 def createSuccessResponse(param):
-    return JSONResponse({
+    return {
         "date": str(datetime.now()),
         "success": True,
         "param": param,
         "code": 200,
-    }, 200)
+    }
 
 
 def createErrorResponse(error):

@@ -8,11 +8,11 @@ from app.utils.utils import generateUuid
 class User(Base):
     __tablename__ = 'users'
     user_id: int = Column(String(14), primary_key=True, autoincrement=False)
-    name: str = Column(String(34), nullable=False)
-    surname: str = Column(String(34), nullable=False)
+    name: str = Column(String(34), nullable=True)
+    surname: str = Column(String(34), nullable=True)
     email: str = Column(String(43), nullable=False)
-    access_token: str = Column(String(140), nullable=False)
-    refresh_token: str = Column(String(140), nullable=False)
+    access_token: str = Column(String(140), nullable=True)
+    refresh_token: str = Column(String(140), nullable=True)
     created_on: datetime.date = Column(Date, nullable=False)
 
     def __init__(self, name, surname, email, refreshToken, accessToken):
