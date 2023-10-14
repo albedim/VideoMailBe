@@ -7,6 +7,8 @@ import base64
 
 from starlette.responses import FileResponse
 
+from app.model.repository.sending import SendingRepository
+from app.model.repository.videoMail import VideoMailRepository
 from app.model.repository.user import UserRepository
 from app.schema.schema import EmailSentSchema
 from app.services.user import UserService
@@ -35,7 +37,8 @@ class VideoMailService:
             videoPath = "files/videomails/"+videoName+".mp4"
             cls.saveFile(request.video, videoPath)
             cls.extractVideoCover(videoPath)
-
+            videoMail = VideoMailRepository.create(request.subject, videoPath)
+            print(videoMail.toJSON())
             html_content = '''
                 <html>
                     <body>
@@ -61,6 +64,7 @@ class VideoMailService:
                 if userReceiver is None:
                     userReceiver = UserRepository.create(False, receiver, None)
 
+                sending = SendingRepository.create("a", videoMail.videoMail_id, userReceiver.user_id, user.user_id)
                 encoded_mail = base64.urlsafe_b64encode(
                     bytes(
                         f"Content-Type: text/html; charset=\"UTF-8\"\n" +
@@ -108,6 +112,51 @@ class VideoMailService:
             return createErrorResponse(UserNotFoundException)
         except EmailNotSentException as exc:
             return createErrorResponse(EmailNotSentException)
+        except Exception as exc:
+            print(exc)
+            return createErrorResponse(GException)
+
+    @classmethod
+    def getSentVideoMails(cls, userId):
+        try:
+            user = UserRepository.getUserById(userId)
+            if user is None:
+                raise UserNotFoundException()
+
+            videoMails = VideoMailRepository.getSentVideoMails(userId)
+            res = []
+            for videoMail in videoMails:
+                path = videoMail[0].path.split("/")[-1]
+                res.append(videoMail[0].toJSON(receiver=videoMail[1], path="http://localhost:8000/videoMails/"+path))
+
+            return createSuccessResponse({
+                'sender': user.toJSON(),
+                'videoMails': res
+            })
+        except UserNotFoundException as exc:
+            return createErrorResponse(UserNotFoundException)
+        except Exception as exc:
+            return createErrorResponse(GException)
+
+    @classmethod
+    def getReceivedVideoMails(cls, userId):
+        try:
+            user = UserRepository.getUserById(userId)
+            if user is None:
+                raise UserNotFoundException()
+
+            videoMails = VideoMailRepository.getReceivedVideoMails(userId)
+            res = []
+            for videoMail in videoMails:
+                path = videoMail[0].path.split("/")[-1]
+                res.append(videoMail[0].toJSON(sender=videoMail[1], path="http://localhost:8000/videoMails/"+path))
+
+            return createSuccessResponse({
+                'receiver': user.toJSON(),
+                'videoMails': res
+            })
+        except UserNotFoundException as exc:
+            return createErrorResponse(UserNotFoundException)
         except Exception as exc:
             return createErrorResponse(GException)
 

@@ -43,14 +43,16 @@ class UserService:
     @classmethod
     def signin(cls, request):
         try:
-            user = UserRepository.signin(request.email, hashString(request.password))
+            user = UserRepository.getUserByEmail(request.email)
 
             if user is None:
                 raise UserNotFoundException()
             if not user.completed:
                 raise UserNotCompletedException()
-
-            return createSuccessResponse(user.toJSON())
+            if user.password == hashString(request.password):
+                return createSuccessResponse(user.toJSON())
+            else:
+                raise UserNotFoundException()
 
         except UserNotFoundException as exc:
             return createErrorResponse(UserNotFoundException)

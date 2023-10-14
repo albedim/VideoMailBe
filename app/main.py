@@ -6,6 +6,7 @@ from fastapi import FastAPI
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 
+from app.routers.sending import sendingRouter
 from app.routers.videoMail import videoMailRouter
 from app.utils.errors.MethodNotAllowedException import MethodNotAllowedException
 from app.utils.errors.NotFoundException import NotFoundException
@@ -15,6 +16,7 @@ from app.configuration.config import Base, engine
 
 app = FastAPI()
 app.include_router(userRouter, prefix="/users")
+app.include_router(sendingRouter, prefix="/sendings")
 app.include_router(videoMailRouter, prefix="/videoMails")
 
 

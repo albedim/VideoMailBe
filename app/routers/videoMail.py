@@ -13,6 +13,24 @@ def sendVideoMail(request: EmailSentSchema):
     return VideoMailService.sendMail(request)
 
 
+@videoMailRouter.get("/user/{userId}")
+def getVideoMails(userId: str):
+    return {
+        'sent': f'http://localhost:8000/videoMails/user/{userId}/sent',
+        'received': f'http://localhost:8000/videoMails/user/{userId}/received'
+    }
+
+
+@videoMailRouter.get("/user/{userId}/sent")
+def getSentVideoMails(userId: str):
+    return VideoMailService.getSentVideoMails(userId)
+
+
+@videoMailRouter.get("/user/{userId}/received")
+def getReceivedVideoMails(userId: str):
+    return VideoMailService.getReceivedVideoMails(userId)
+
+
 @videoMailRouter.get("/{videoName}")
 async def getVideoMail(videoName: str):
     return VideoMailService.getVideoFile(videoName)
