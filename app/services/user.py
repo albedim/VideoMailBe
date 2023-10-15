@@ -59,7 +59,7 @@ class UserService:
         except UserNotCompletedException as exc:
             return createErrorResponse(UserNotCompletedException)
         except Exception as exc:
-            return createErrorResponse(GException)
+            return createErrorResponse(GException(exc))
 
     @classmethod
     def completeUser(cls, request):
@@ -76,7 +76,7 @@ class UserService:
         except UnAuthorizedException as exc:
             return createErrorResponse(UnAuthorizedException)
         except Exception as exc:
-            return createErrorResponse(GException)
+            return createErrorResponse(GException(exc))
 
     @classmethod
     def refreshToken(

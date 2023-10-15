@@ -38,7 +38,7 @@ class VideoMailService:
             cls.saveFile(request.video, videoPath)
             cls.extractVideoCover(videoPath)
             videoMail = VideoMailRepository.create(request.subject, videoPath)
-            print(videoMail.toJSON())
+
             html_content = '''
                 <html>
                     <body>
@@ -113,8 +113,7 @@ class VideoMailService:
         except EmailNotSentException as exc:
             return createErrorResponse(EmailNotSentException)
         except Exception as exc:
-            print(exc)
-            return createErrorResponse(GException)
+            return createErrorResponse(GException(exc))
 
     @classmethod
     def getSentVideoMails(cls, userId):
@@ -127,7 +126,12 @@ class VideoMailService:
             res = []
             for videoMail in videoMails:
                 path = videoMail[0].path.split("/")[-1]
-                res.append(videoMail[0].toJSON(receiver=videoMail[1], path="http://localhost:8000/videoMails/"+path))
+                res.append(
+                    videoMail[0].toJSON(
+                        receiver=videoMail[1].toJSON(),
+                        path="http://localhost:8000/videoMails/"+path
+                    )
+                )
 
             return createSuccessResponse({
                 'sender': user.toJSON(),
@@ -136,7 +140,7 @@ class VideoMailService:
         except UserNotFoundException as exc:
             return createErrorResponse(UserNotFoundException)
         except Exception as exc:
-            return createErrorResponse(GException)
+            return createErrorResponse(GException(exc))
 
     @classmethod
     def getReceivedVideoMails(cls, userId):
@@ -149,7 +153,12 @@ class VideoMailService:
             res = []
             for videoMail in videoMails:
                 path = videoMail[0].path.split("/")[-1]
-                res.append(videoMail[0].toJSON(sender=videoMail[1], path="http://localhost:8000/videoMails/"+path))
+                res.append(
+                    videoMail[0].toJSON(
+                        sender=videoMail[1].toJSON(),
+                        path="http://localhost:8000/videoMails/"+path
+                    )
+                )
 
             return createSuccessResponse({
                 'receiver': user.toJSON(),
@@ -158,15 +167,27 @@ class VideoMailService:
         except UserNotFoundException as exc:
             return createErrorResponse(UserNotFoundException)
         except Exception as exc:
-            return createErrorResponse(GException)
+            return createErrorResponse(GException(exc))
+
+    """
+    :description: Crea una file response di un video
+    :param videoName: str
+    :return: dict | FileResponse
+    """
 
     @classmethod
     def getVideoFile(cls, videoName):
-        if os.path.exists(os.path.join(os.getcwd(), "files/videomails/" + videoName)):
-            return FileResponse(os.path.join(os.getcwd(), "files/videomails/" + videoName),
+        if os.path.exists("files/videomails/" + videoName):
+            return FileResponse("files/videomails/" + videoName,
                                 media_type='video/mp4')
         else:
             return createErrorResponse(FileNotFoundException)
+
+    """
+    :description: Crea una file response della copertina di un video
+    :param videoName: str
+    :return: dict | FileResponse
+    """
 
     @classmethod
     def getCoverFile(cls, videoName):
@@ -176,16 +197,26 @@ class VideoMailService:
         else:
             return createErrorResponse(FileNotFoundException)
 
+    """
+    :description: Decodifica un video in base64 e lo salva
+    :param videoPath: str
+    :return: None
+    """
+
     @classmethod
     def saveFile(cls, base64Data, filePath):
         try:
             decoded_data = base64.b64decode(base64Data)
             with open(filePath, 'wb') as file:
                 file.write(decoded_data)
-            return True
         except Exception as exc:
-            print(exc)
-            return False
+            ...
+
+    """
+    :description: Estrae un frame da un video e lo salva come file jpeg
+    :param videoPath: str
+    :return: None
+    """
 
     @classmethod
     def extractVideoCover(cls, videoPath):
@@ -199,5 +230,4 @@ class VideoMailService:
             cv2.imwrite(videoPath.replace("videomails", "covers").replace("mp4", "jpeg"),
                         image)  # save frame as JPEG file
         except Exception as e:
-            print(e)
-            return False
+            ...

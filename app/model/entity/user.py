@@ -11,7 +11,7 @@ class User(Base):
     name: str = Column(String(34), nullable=True)
     registered: bool = Column(Boolean, nullable=False)
     completion_link: str = Column(String(16), nullable=True)
-    password: bool = Column(String(140), nullable=True)
+    password: str = Column(String(140), nullable=True)
     completed: bool = Column(Boolean, nullable=False)
     surname: str = Column(String(34), nullable=True)
     email: str = Column(String(43), nullable=False)
