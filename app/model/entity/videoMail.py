@@ -7,7 +7,7 @@ from app.utils.utils import generateUuid
 
 class VideoMail(Base):
     __tablename__ = 'videoMails'
-    videoMail_id: int = Column(String(14), primary_key=True, autoincrement=False)
+    videoMail_id: int = Column(String(8), primary_key=True, autoincrement=False)
     subject: str = Column(String(34), nullable=False)
     code: str = Column(String(4), nullable=False)
     path: str = Column(String(54), nullable=False)

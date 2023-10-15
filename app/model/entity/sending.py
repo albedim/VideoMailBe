@@ -8,9 +8,9 @@ from app.utils.utils import generateUuid
 
 class Sending(Base):
     __tablename__ = 'sendings'
-    sender_id: int = Column(String(14), ForeignKey('users.user_id'), primary_key=True, autoincrement=False)
-    receiver_id: str = Column(String(14), ForeignKey('users.user_id'), primary_key=True, autoincrement=False)
-    videoMail_id: str = Column(String(14), ForeignKey('videoMails.videoMail_id'), primary_key=True, autoincrement=False)
+    sender_id: int = Column(String(8), ForeignKey('users.user_id'), primary_key=True, autoincrement=False)
+    receiver_id: str = Column(String(8), ForeignKey('users.user_id'), primary_key=True, autoincrement=False)
+    videoMail_id: str = Column(String(8), ForeignKey('videoMails.videoMail_id'), primary_key=True, autoincrement=False)
     receiver_type: enum = Column(Enum("a", "cc"), nullable=False)
 
     def __init__(self, receiver_type, sender_id, receiver_id, videoMail_id):
