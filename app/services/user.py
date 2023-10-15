@@ -35,7 +35,13 @@ class UserService:
             return createErrorResponse(UnAuthorizedException)
 
         userInformation = requests.get("https://oauth2.googleapis.com/tokeninfo?id_token="+res['id_token']).json()
-        createdUser = UserRepository.create(True, userInformation['email'], res['refresh_token'])
+
+        user = UserRepository.getUserByEmail(userInformation['email'])
+        if user is None:
+            createdUser = UserRepository.create(True, userInformation['email'], res['refresh_token'])
+        else:
+            createdUser = UserRepository.registerUser(user, res['refresh_token'])
+
         return createSuccessResponse({
             'complete_account_code': createdUser.completion_link
         })

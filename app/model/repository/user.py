@@ -1,5 +1,8 @@
+from sqlalchemy import text
+
 from app.configuration.config import Base, sql
 from app.model.entity.user import User
+from app.utils.utils import generateUuid
 
 
 class UserRepository:
@@ -45,4 +48,22 @@ class UserRepository:
     @classmethod
     def signin(cls, email, password):
         user = sql.query(User).filter(User.email == email).filter(User.password == password).first()
+        return user
+
+    @classmethod
+    def getContacts(cls, userId):
+        contacts = sql.query(User).from_statement(
+            text("SELECT users.* "
+                 "FROM users "
+                 "JOIN contacts "
+                 "ON contacts.contact_id = users.user_id "
+                 "WHERE contacts.user_id = :userId").params(userId=userId)
+        ).all()
+        return contacts
+
+    @classmethod
+    def registerUser(cls, user, refreshToken):
+        user.refresh_token = refreshToken
+        user.registered = True
+        sql.commit()
         return user

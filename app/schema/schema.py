@@ -26,3 +26,8 @@ class UserCompleteSchema(BaseModel):
 class UserSigninSchema(BaseModel):
     email: str
     password: str
+
+
+class ContactCreateSchema(BaseModel):
+    user_id: str
+    contact_email: str

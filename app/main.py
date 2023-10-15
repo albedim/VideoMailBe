@@ -12,10 +12,12 @@ from app.utils.errors.MethodNotAllowedException import MethodNotAllowedException
 from app.utils.errors.NotFoundException import NotFoundException
 from app.utils.utils import createErrorResponse
 from routers.user import userRouter
+from routers.contact import contactRouter
 from app.configuration.config import Base, engine
 
 app = FastAPI()
 app.include_router(userRouter, prefix="/users")
+app.include_router(contactRouter, prefix="/contacts")
 app.include_router(sendingRouter, prefix="/sendings")
 app.include_router(videoMailRouter, prefix="/videoMails")
 
