@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from app.services.utils import getConnectionParameters, generatePinCode,generateUuid
 from fastapi import APIRouter
+from app.services.qrCodeGenerator import QRCodeGenerator
 
 test = APIRouter()
 
@@ -21,6 +22,13 @@ async def getPinCode():
 async def getUuid():
     uuid = generateUuid()
     return {"Uuid": uuid}
+
+
+@test.get("/getQrCode")
+async def getQrCode():
+    qr = QRCodeGenerator()
+    qr.create(generateUuid(), generatePinCode())
+    return {"Creazione": "ok"}
 
 
 

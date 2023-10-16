@@ -1,3 +1,4 @@
+
 datasources:
     - name: local
       user: videoMail
@@ -5,5 +6,9 @@ datasources:
       host: localhost
       port: 3306
       db: videoMail
+
+constants:
+      path_qrcode: "qrCode/"
+      domain: "www.vmail.com/"
 
 

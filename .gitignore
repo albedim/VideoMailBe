@@ -80,3 +80,9 @@ fabric.properties
 /.idea/inspectionProfiles/Project_Default.xml
 /.idea/misc.xml
 /.idea/vcs.xml
+/app/qrCode/b12fa83a.png
+/app/qrCode/fa7e3e80.png
+/app/routers/__pycache__/hello.cpython-311.pyc
+/app/routers/__pycache__/test.cpython-311.pyc
+/app/services/__pycache__/qrCodeGenerator.cpython-311.pyc
+/app/services/__pycache__/utils.cpython-311.pyc

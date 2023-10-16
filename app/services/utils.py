@@ -17,6 +17,16 @@ def getConnectionParameters(datasource):
             raise Exception("Connection not found")
 
 
+def getValue(parameter) :
+    with open('../config/config.yaml', 'r') as f :
+        data = yaml.load(f, Loader=yaml.FullLoader)
+        for k, v in data['constants'].items():
+
+            if k == parameter:
+                return v
+        raise Exception("Connection not found")
+
+
 def generatePinCode(size=6, chars=string.digits) :
         return ''.join(random.choice(chars) for x in range(size))
 
