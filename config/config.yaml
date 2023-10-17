@@ -10,4 +10,9 @@ client:
   client_id: 651229141185-egfqcebnr2a5bdll5r04lfrg1t03fms1.apps.googleusercontent.com
   client_secret: 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
 
+variables:
+  - name: local
+    BASE_URL: http://localhost:8000
+    BASE_FE_URL: http://localhost:3000
+
 

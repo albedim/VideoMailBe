@@ -4,6 +4,7 @@ from starlette.responses import FileResponse
 
 from app.schema.schema import EmailSentSchema
 from app.services.videoMail import VideoMailService
+from app.utils.utils import BASE_URL
 
 videoMailRouter = APIRouter()
 
@@ -16,8 +17,8 @@ def sendVideoMail(request: EmailSentSchema):
 @videoMailRouter.get("/user/{userId}")
 def getVideoMails(userId: str):
     return {
-        'sent': f'http://localhost:8000/videoMails/user/{userId}/sent',
-        'received': f'http://localhost:8000/videoMails/user/{userId}/received'
+        'sent': f'{BASE_URL}/videoMails/user/{userId}/sent',
+        'received': f'{BASE_URL}/videoMails/user/{userId}/received'
     }
 
 
