@@ -5,8 +5,10 @@ import uvicorn
 from fastapi import FastAPI
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
+from starlette.middleware.cors import CORSMiddleware
 
 from app.routers.sending import sendingRouter
+from app.routers.test import test
 from app.routers.videoMail import videoMailRouter
 from app.utils.errors.MethodNotAllowedException import MethodNotAllowedException
 from app.utils.errors.NotFoundException import NotFoundException
@@ -16,10 +18,26 @@ from routers.contact import contactRouter
 from app.configuration.config import Base, engine
 
 app = FastAPI()
+
 app.include_router(userRouter, prefix="/users")
+app.include_router(test, prefix="/test")
 app.include_router(contactRouter, prefix="/contacts")
 app.include_router(sendingRouter, prefix="/sendings")
 app.include_router(videoMailRouter, prefix="/videoMails")
+
+origins = [
+    "http://localhost",
+    "http://localhost:3000",
+    "https://yourfrontendapp.com",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 @app.get("/")

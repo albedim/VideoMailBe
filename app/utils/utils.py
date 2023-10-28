@@ -2,17 +2,20 @@ import base64
 import hashlib
 import os
 from datetime import datetime
+from http.client import HTTPException
 
 import cv2
+import jwt
 import yaml
 import string
 import random
 import uuid
 
+from fastapi.security import OAuth2PasswordBearer
 from moviepy.video.io.VideoFileClip import VideoFileClip
 from starlette.responses import JSONResponse
-
 from app.utils.errors.GException import GException
+from app.utils.errors.UnAuthotizedException import UnAuthorizedException
 
 
 def getConnectionParameters(datasource):
@@ -84,6 +87,14 @@ def createErrorResponse(error):
         },
         "code": error.code,
     }, error.code)
+
+
+def createJWTToken(data, expires_delta):
+    to_encode = data.copy()
+    expire = datetime.utcnow() + expires_delta
+    to_encode.update({"exp": expire})
+    encoded_jwt = jwt.encode(to_encode, "super-secret", algorithm="HS256")
+    return encoded_jwt
 
 
 BASE_URL = getVariables('local')['BASE_URL']

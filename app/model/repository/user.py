@@ -31,8 +31,9 @@ class UserRepository:
         return user
 
     @classmethod
-    def completeUser(cls, name, surname, password, user):
+    def completeUser(cls, profileImage, name, surname, password, user):
         user.name = name
+        user.profile_image_path = profileImage
         user.surname = surname
         user.password = password
         user.completed = True

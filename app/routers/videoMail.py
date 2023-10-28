@@ -32,11 +32,16 @@ def getReceivedVideoMails(userId: str):
     return VideoMailService.getReceivedVideoMails(userId)
 
 
-@videoMailRouter.get("/{videoName}")
-async def getVideoMail(videoName: str):
-    return VideoMailService.getVideoFile(videoName)
+@videoMailRouter.get("/{videoId}")
+async def getVideoMail(videoId: str):
+    return VideoMailService.getVideo(videoId)
 
 
-@videoMailRouter.get("/covers/{videoName}")
-async def getVideoMailCover(videoName: str):
-    return VideoMailService.getCoverFile(videoName)
+@videoMailRouter.get("/videos/{videoId}")
+async def getVideoMailFile(videoId: str):
+    return VideoMailService.getVideoFile(videoId)
+
+
+@videoMailRouter.get("/covers/{videoId}")
+async def getVideoMailCoverFile(videoId: str):
+    return VideoMailService.getCoverFile(videoId)

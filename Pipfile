@@ -18,6 +18,8 @@ opencv-python = "*"
 pip = "*"
 moviepy = "*"
 pyqrcode = "*"
+pydantic = "==1.8.2"
+fastapi-jwt-auth = "*"
 
 [dev-packages]
 

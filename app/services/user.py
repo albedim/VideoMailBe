@@ -1,15 +1,20 @@
+import os
+from datetime import timedelta
+
 import jwt
 import requests
 from google.oauth2 import id_token
+from starlette.responses import FileResponse
 
 from app.model.entity.user import User
 from app.model.repository.user import UserRepository
+from app.utils.errors.FileNotFoundEcxeption import FileNotFoundException
 from app.utils.errors.GException import GException
 from app.utils.errors.RefreshTokenNeededExceptiom import RefreshTokenNeededException
 from app.utils.errors.UnAuthotizedException import UnAuthorizedException
 from app.utils.errors.UserNotCompletedException import UserNotCompletedException
 from app.utils.errors.UserNotFoundException import UserNotFoundException
-from app.utils.utils import createSuccessResponse, createErrorResponse, getClient, hashString
+from app.utils.utils import createSuccessResponse, createErrorResponse, getClient, hashString, createJWTToken, BASE_URL
 
 
 class UserService:
@@ -47,6 +52,18 @@ class UserService:
         })
 
     @classmethod
+    def getUser(cls, userId):
+        try:
+
+            user = UserRepository.getUserById(userId)
+            if user is None:
+                raise UserNotFoundException()
+            return createSuccessResponse(user.toJSON(profile_image_path=f"{BASE_URL}/users/{user.user_id}/image"))
+
+        except UserNotFoundException:
+            return createErrorResponse(UserNotFoundException)
+
+    @classmethod
     def signin(cls, request):
         try:
             user = UserRepository.getUserByEmail(request.email)
@@ -56,7 +73,9 @@ class UserService:
             if not user.completed:
                 raise UserNotCompletedException()
             if user.password == hashString(request.password):
-                return createSuccessResponse(user.toJSON())
+                return createSuccessResponse({
+                    'token': createJWTToken({'user_id': user.user_id}, timedelta(days=4))
+                })
             else:
                 raise UserNotFoundException()
 
@@ -74,8 +93,12 @@ class UserService:
 
             if user is None:
                 raise UserNotFoundException()
-            user = UserRepository.completeUser(request.name, request.surname, hashString(request.password), user)
-            return createSuccessResponse(user.toJSON())
+            if request.profile_image is None:
+                request.profile_image = "files/profileimages/default.png"
+            user = UserRepository.completeUser(request.profile_image, request.name, request.surname, hashString(request.password), user)
+            return createSuccessResponse({
+                'token': createJWTToken({'user_id': user.user_id}, timedelta(days=4))
+            })
 
         except UserNotFoundException as exc:
             return createErrorResponse(UserNotFoundException)
@@ -97,7 +120,36 @@ class UserService:
             "grant_type": "refresh_token",
             "redirect_uri": "http://localhost:3000"
         }).json()
-
+        print(res)
         if only_access_token:
             return res['access_token']
         return res
+
+    @classmethod
+    def getUserImage(cls, userId):
+        try:
+            user = UserRepository.getUserById(userId)
+
+            if user is None:
+                raise UserNotFoundException()
+            if os.path.exists(user.profile_image_path):
+                return FileResponse(user.profile_image_path,
+                                    media_type='image/png')
+            else:
+                return createErrorResponse(FileNotFoundException)
+        except UserNotFoundException:
+            return createErrorResponse(UserNotFoundException)
+
+    @classmethod
+    def sync(cls, token_data):
+        try:
+            """
+            user = UserRepository.getUserById(token_data['user_id'])
+            if user is None:
+                raise UserNotFoundException()
+            """
+            return createSuccessResponse(None)
+        except UserNotFoundException:
+            return createErrorResponse(UserNotFoundException)
+        except Exception as exc:
+            return createErrorResponse(GException(exc))

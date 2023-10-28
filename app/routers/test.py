@@ -27,8 +27,9 @@ async def getUuid():
 @test.get("/getQrCode")
 async def getQrCode():
     qr = QRCodeGenerator()
-    qr.create(generateUuid(), generatePinCode())
-    return {"Creazione": "ok"}
+    a = qr.create(generateUuid(), generatePinCode())
+    print(a)
+    return {"Creazione": a}
 
 
 

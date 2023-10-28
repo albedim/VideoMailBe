@@ -23,7 +23,8 @@ class VideoMailRepository:
                  "ON videoMails.videoMail_id = sendings.videoMail_id "
                  "JOIN users "
                  "ON sendings.receiver_id = users.user_id "
-                 "WHERE sendings.sender_id = :senderId").params(senderId=userId)
+                 "WHERE sendings.sender_id = :senderId "
+                 "ORDER BY videomails.sent_on DESC").params(senderId=userId)
         ).all()
         return videoMails
 
@@ -48,6 +49,12 @@ class VideoMailRepository:
                  "ON videoMails.videoMail_id = sendings.videoMail_id "
                  "JOIN users "
                  "ON sendings.sender_id = users.user_id "
-                 "WHERE sendings.receiver_id = :senderId ").params(senderId=userId)
+                 "WHERE sendings.receiver_id = :senderId "
+                 "ORDER BY videomails.sent_on DESC").params(senderId=userId)
         ).all()
         return videoMails
+
+    @classmethod
+    def getVideoMail(cls, videoId):
+        videoMail = sql.query(VideoMail).filter(VideoMail.videoMail_id == videoId).first()
+        return videoMail

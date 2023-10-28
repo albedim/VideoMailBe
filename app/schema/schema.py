@@ -19,6 +19,7 @@ class EmailSentSchema(BaseModel):
 class UserCompleteSchema(BaseModel):
     name: str
     surname: str
+    profile_image: str
     password: str
     completion_link: str
 
@@ -31,3 +32,7 @@ class UserSigninSchema(BaseModel):
 class ContactCreateSchema(BaseModel):
     user_id: str
     contact_email: str
+
+
+class TokenData(BaseModel):
+    user_id: str

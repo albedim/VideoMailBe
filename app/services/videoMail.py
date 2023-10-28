@@ -17,7 +17,8 @@ from app.utils.errors.FileNotFoundEcxeption import FileNotFoundException
 from app.utils.errors.GException import GException
 from app.utils.errors.UnAuthotizedException import UnAuthorizedException
 from app.utils.errors.UserNotFoundException import UserNotFoundException
-from app.utils.utils import createSuccessResponse, createErrorResponse, generateUuid, getFormattedDateTime
+from app.utils.errors.VideoMailNotFoundException import VideoMailNotFoundException
+from app.utils.utils import createSuccessResponse, createErrorResponse, generateUuid, getFormattedDateTime, BASE_URL
 
 
 class VideoMailService:
@@ -34,9 +35,9 @@ class VideoMailService:
                 raise UnAuthorizedException()
 
             videoName = getFormattedDateTime()
-            videoPath = "files/videomails/"+videoName+".mp4"
+            videoPath = "files/videomails/" + videoName + ".webm"
             cls.saveFile(request.video, videoPath)
-            cls.extractVideoCover(videoPath)
+            # cls.extractVideoCover(videoPath, "")
             videoMail = VideoMailRepository.create(request.subject, videoPath)
 
             html_content = '''
@@ -45,11 +46,11 @@ class VideoMailService:
                         <h1>Your Video Email</h1>
                         <p>Video-email #334 by Alberto Di Maio</p>
                         <video width="320" height="240" controls>
-                            <source src="http://localhost:8000/videoMails/''' + videoName + '''.mp4" type="video/mp4">
+                            <source src="http://localhost:8000/videoMails/videos/''' + videoMail.videoMail_id + '''" type="video/webm">
                             <div>
                                 <p>Il tuo client non è supportato, perciò dovrai scaricare l'app per vedere il video-email</p>
-                                <a href="http://localhost:3000/videoMails/#343535">
-                                    <img src="http://localhost:8000/videoMails/covers''' + videoName + '''.jpeg">
+                                <a href="http://localhost:3000/videoMails/'''+videoMail.videoMail_id+'''">
+                                    <img src="http://localhost:8000/videoMails/covers/''' + videoMail.videoMail_id + '''">
                                 </a>
                             </div>
                         </video>
@@ -125,11 +126,10 @@ class VideoMailService:
             videoMails = VideoMailRepository.getSentVideoMails(userId)
             res = []
             for videoMail in videoMails:
-                path = videoMail[0].path.split("/")[-1]
                 res.append(
                     videoMail[0].toJSON(
-                        receiver=videoMail[1].toJSON(),
-                        path="http://localhost:8000/videoMails/"+path
+                        receiver=videoMail[1].toJSON(profile_image_path=f"{BASE_URL}/users/{videoMail[1].user_id}/image"),
+                        path=f"{BASE_URL}/videoMails/videos/{videoMail[0].videoMail_id}"
                     )
                 )
 
@@ -152,11 +152,10 @@ class VideoMailService:
             videoMails = VideoMailRepository.getReceivedVideoMails(userId)
             res = []
             for videoMail in videoMails:
-                path = videoMail[0].path.split("/")[-1]
                 res.append(
                     videoMail[0].toJSON(
-                        sender=videoMail[1].toJSON(),
-                        path="http://localhost:8000/videoMails/"+path
+                        sender=videoMail[1].toJSON(profile_image_path=f"{BASE_URL}/users/{videoMail[1].user_id}/image"),
+                        path=f"{BASE_URL}/videoMails/videos/{videoMail[0].videoMail_id}"
                     )
                 )
 
@@ -176,10 +175,12 @@ class VideoMailService:
     """
 
     @classmethod
-    def getVideoFile(cls, videoName):
-        if os.path.exists("files/videomails/" + videoName):
-            return FileResponse("files/videomails/" + videoName,
-                                media_type='video/mp4')
+    def getVideoFile(cls, videoId):
+        videoMail = VideoMailRepository.getVideoMail(videoId)
+
+        if videoMail is not None and os.path.exists(videoMail.path):
+            return FileResponse(videoMail.path,
+                                media_type='video/webm')
         else:
             return createErrorResponse(FileNotFoundException)
 
@@ -190,9 +191,11 @@ class VideoMailService:
     """
 
     @classmethod
-    def getCoverFile(cls, videoName):
-        if os.path.exists("files/covers/" + videoName):
-            return FileResponse("files/covers/" + videoName,
+    def getCoverFile(cls, videoId):
+        videoMail = VideoMailRepository.getVideoMail(videoId)
+
+        if videoMail is not None and os.path.exists(videoMail.path.replace("videomails", "covers")):
+            return FileResponse(videoMail.path,
                                 media_type='image/png')
         else:
             return createErrorResponse(FileNotFoundException)
@@ -219,15 +222,46 @@ class VideoMailService:
     """
 
     @classmethod
-    def extractVideoCover(cls, videoPath):
+    def extractVideoCover(cls, videoPath, frame_number):
         try:
-            count = 0
             vidcap = cv2.VideoCapture(videoPath)
+
+            # Check if the video file was successfully opened
+            if not vidcap.isOpened():
+                print("a")
+                raise Exception("Failed to open video file")
+
+            # Get the total number of frames in the video
+            total_frames = int(vidcap.get(cv2.CAP_PROP_FRAME_COUNT))
+
+            if frame_number >= total_frames:
+                print("aaa")
+                raise Exception("Invalid frame number. Frame number exceeds the total number of frames.")
+            # Set the frame to extract
+            vidcap.set(cv2.CAP_PROP_POS_FRAMES, frame_number)
             success, image = vidcap.read()
-            success = True
-            vidcap.set(cv2.CAP_PROP_POS_MSEC, (count * 1000))
-            success, image = vidcap.read()
-            cv2.imwrite(videoPath.replace("videomails", "covers").replace("mp4", "jpeg"),
-                        image)  # save frame as JPEG file
+
+            if success:
+                # Customize the output file name and path
+                output_path = videoPath.replace("videomails", "covers").replace("webm", "jpeg")
+                cv2.imwrite(output_path, image)
+            else:
+                print("aaa")
+                raise Exception("Failed to extract the cover image.")
+
+            # Release the video capture object when done
+            vidcap.release()
         except Exception as e:
-            ...
+            print("aaaa")
+            print(f"Error: {str(e)}")
+
+    @classmethod
+    def getVideo(cls, videoId):
+        videoMail = VideoMailRepository.getVideoMail(videoId)
+
+        if videoMail is None:
+            raise VideoMailNotFoundException()
+
+        return createSuccessResponse(videoMail.toJSON(
+            path=f"{BASE_URL}/videoMails/videos/{videoMail.videoMail_id}")
+        )

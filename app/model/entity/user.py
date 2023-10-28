@@ -1,6 +1,6 @@
 import datetime
 
-from sqlalchemy import String, Column, Date, Boolean
+from sqlalchemy import String, Column, Date, Boolean, DateTime
 from app.configuration.config import Base
 from app.utils.utils import generateUuid
 
@@ -9,6 +9,7 @@ class User(Base):
     __tablename__ = 'users'
     user_id: int = Column(String(8), primary_key=True, autoincrement=False)
     name: str = Column(String(46), nullable=True)
+    profile_image_path: str = Column(String(54), nullable=True)
     registered: bool = Column(Boolean, nullable=False)
     completion_link: str = Column(String(16), nullable=True)
     password: str = Column(String(140), nullable=True)
@@ -16,7 +17,7 @@ class User(Base):
     surname: str = Column(String(46), nullable=True)
     email: str = Column(String(62), nullable=False)
     refresh_token: str = Column(String(140), nullable=True)
-    created_on: datetime.date = Column(Date, nullable=False)
+    created_on: datetime.date = Column(DateTime, nullable=False)
 
     def __init__(self, registered, email, refreshToken):
         self.user_id = generateUuid()
@@ -33,6 +34,7 @@ class User(Base):
             'name': self.name,
             'registered': self.registered,
             'completion_link': self.completion_link,
+            'profile_image_path': self.profile_image_path,
             'completed': self.completed,
             'surname': self.surname,
             'email': self.email,

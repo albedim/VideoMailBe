@@ -1,7 +1,8 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from starlette.responses import FileResponse
 
-from app.schema.schema import UserAuthSchema, UserRefreshSchema, UserCompleteSchema, UserSigninSchema
+from app.configuration.config import authjwt
+from app.schema.schema import UserAuthSchema, UserRefreshSchema, UserCompleteSchema, UserSigninSchema, TokenData
 from app.services.user import UserService
 
 userRouter = APIRouter()
@@ -20,3 +21,18 @@ async def signin(request: UserSigninSchema):
 @userRouter.post("/auth")
 async def auth(request: UserAuthSchema):
     return UserService.auth(request)
+
+
+@userRouter.get("/{userId}")
+async def getUser(userId: str):
+    return UserService.getUser(userId)
+
+
+@userRouter.get("/{userId}/image")
+async def getUserImage(userId: str):
+    return UserService.getUserImage(userId)
+
+
+@userRouter.post("/sync")
+async def sync():
+    return UserService.sync("")
