@@ -61,17 +61,17 @@ class VideoMailService:
             receivers = []
             for receiver in request.receiver_emails:
 
-                userReceiver = UserRepository.getUserByEmail(receiver)
+                userReceiver = UserRepository.getUserByEmail(receiver.email)
                 if userReceiver is None:
-                    userReceiver = UserRepository.create(False, receiver, None)
+                    userReceiver = UserRepository.create(False, receiver.email, None)
 
-                sending = SendingRepository.create("a", videoMail.videoMail_id, userReceiver.user_id, user.user_id)
+                sending = SendingRepository.create(receiver.type, videoMail.videoMail_id, userReceiver.user_id, user.user_id)
                 encoded_mail = base64.urlsafe_b64encode(
                     bytes(
                         f"Content-Type: text/html; charset=\"UTF-8\"\n" +
                         "MIME-Version: 1.0\n" +
                         "Content-Transfer-Encoding: base64\n" +
-                        "to: " + receiver + "\n" +
+                        "to: " + userReceiver.email + "\n" +
                         "from: " + user.email + "\n" +
                         "subject: " + request.subject + "\n\n" +
                         f"{base64.b64encode(html_content.encode()).decode('utf-8')}", 'utf-8'
@@ -127,10 +127,7 @@ class VideoMailService:
             res = []
             for videoMail in videoMails:
                 res.append(
-                    videoMail[0].toJSON(
-                        receiver=videoMail[1].toJSON(profile_image_path=f"{BASE_URL}/users/{videoMail[1].user_id}/image"),
-                        path=f"{BASE_URL}/videoMails/videos/{videoMail[0].videoMail_id}"
-                    )
+                    videoMail[0].toJSON(receiver=videoMail[1].toJSON())
                 )
 
             return createSuccessResponse({
@@ -153,10 +150,7 @@ class VideoMailService:
             res = []
             for videoMail in videoMails:
                 res.append(
-                    videoMail[0].toJSON(
-                        sender=videoMail[1].toJSON(profile_image_path=f"{BASE_URL}/users/{videoMail[1].user_id}/image"),
-                        path=f"{BASE_URL}/videoMails/videos/{videoMail[0].videoMail_id}"
-                    )
+                    videoMail[0].toJSON(sender=videoMail[1].toJSON())
                 )
 
             return createSuccessResponse({
@@ -176,13 +170,16 @@ class VideoMailService:
 
     @classmethod
     def getVideoFile(cls, videoId):
-        videoMail = VideoMailRepository.getVideoMail(videoId)
+        try:
+            videoMail = VideoMailRepository.getVideoMail(videoId)
 
-        if videoMail is not None and os.path.exists(videoMail.path):
-            return FileResponse(videoMail.path,
-                                media_type='video/webm')
-        else:
-            return createErrorResponse(FileNotFoundException)
+            if videoMail is not None and os.path.exists(videoMail.path):
+                return FileResponse(videoMail.path,
+                                    media_type='video/webm')
+            else:
+                return createErrorResponse(FileNotFoundException)
+        except Exception as exc:
+            return createErrorResponse(GException(exc))
 
     """
     :description: Crea una file response della copertina di un video
@@ -252,7 +249,6 @@ class VideoMailService:
             # Release the video capture object when done
             vidcap.release()
         except Exception as e:
-            print("aaaa")
             print(f"Error: {str(e)}")
 
     @classmethod

@@ -1,8 +1,8 @@
 import datetime
 
-from sqlalchemy import String, Column, Date, Boolean
+from sqlalchemy import String, Column, Date, Boolean, DateTime
 from app.configuration.config import Base
-from app.utils.utils import generateUuid
+from app.utils.utils import generateUuid, BASE_URL
 
 
 class VideoMail(Base):
@@ -11,21 +11,21 @@ class VideoMail(Base):
     subject: str = Column(String(34), nullable=False)
     code: str = Column(String(4), nullable=False)
     path: str = Column(String(54), nullable=False)
-    sent_on: datetime.date = Column(Date, nullable=False)
+    sent_on: datetime.datetime = Column(DateTime, nullable=False)
 
     def __init__(self, subject, path):
         self.videoMail_id = generateUuid()
         self.subject = subject
         self.code = generateUuid(4)
         self.path = path
-        self.sent_on = datetime.date.today()
+        self.sent_on = datetime.datetime.utcnow()
 
     def toJSON(self, **kvargs):
         obj = {
             'videoMail_id': self.videoMail_id,
             'subject': self.subject,
             'code': self.code,
-            'path': self.path,
+            'path': f"{BASE_URL}/videoMails/videos/{self.videoMail_id}",
             'sent_on': str(self.sent_on),
         }
         for kvarg in kvargs:

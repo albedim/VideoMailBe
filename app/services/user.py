@@ -58,7 +58,7 @@ class UserService:
             user = UserRepository.getUserById(userId)
             if user is None:
                 raise UserNotFoundException()
-            return createSuccessResponse(user.toJSON(profile_image_path=f"{BASE_URL}/users/{user.user_id}/image"))
+            return createSuccessResponse(user.toJSON())
 
         except UserNotFoundException:
             return createErrorResponse(UserNotFoundException)
@@ -129,7 +129,6 @@ class UserService:
     def getUserImage(cls, userId):
         try:
             user = UserRepository.getUserById(userId)
-
             if user is None:
                 raise UserNotFoundException()
             if os.path.exists(user.profile_image_path):

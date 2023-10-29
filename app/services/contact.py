@@ -12,7 +12,7 @@ from app.utils.errors.RefreshTokenNeededExceptiom import RefreshTokenNeededExcep
 from app.utils.errors.UnAuthotizedException import UnAuthorizedException
 from app.utils.errors.UserNotCompletedException import UserNotCompletedException
 from app.utils.errors.UserNotFoundException import UserNotFoundException
-from app.utils.utils import createSuccessResponse, createErrorResponse, getClient, hashString
+from app.utils.utils import createSuccessResponse, createErrorResponse, getClient, hashString, BASE_URL
 
 
 class ContactService:
@@ -26,6 +26,7 @@ class ContactService:
                 raise UserNotFoundException()
 
             contacts = UserRepository.getContacts(userId)
+            print(contacts)
             res = []
             for contact in contacts:
                 res.append(contact.toJSON())

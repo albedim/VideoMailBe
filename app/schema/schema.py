@@ -9,9 +9,14 @@ class UserRefreshSchema(BaseModel):
     refresh_token: str
 
 
+class ReceiverSchema(BaseModel):
+    email: str
+    type: str
+
+
 class EmailSentSchema(BaseModel):
     video: str
-    receiver_emails: list[str]
+    receiver_emails: list[ReceiverSchema]
     user_id: str
     subject: str
 

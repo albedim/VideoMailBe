@@ -2,7 +2,7 @@ import datetime
 
 from sqlalchemy import String, Column, Date, Boolean, DateTime
 from app.configuration.config import Base
-from app.utils.utils import generateUuid
+from app.utils.utils import generateUuid, BASE_URL
 
 
 class User(Base):
@@ -17,7 +17,7 @@ class User(Base):
     surname: str = Column(String(46), nullable=True)
     email: str = Column(String(62), nullable=False)
     refresh_token: str = Column(String(140), nullable=True)
-    created_on: datetime.date = Column(DateTime, nullable=False)
+    created_on: datetime.datetime = Column(DateTime, nullable=False)
 
     def __init__(self, registered, email, refreshToken):
         self.user_id = generateUuid()
@@ -26,7 +26,7 @@ class User(Base):
         self.registered = registered
         self.completed = False
         self.refresh_token = refreshToken
-        self.created_on = datetime.date.today()
+        self.created_on = datetime.datetime.utcnow()
 
     def toJSON(self, **kvargs):
         obj = {
@@ -34,7 +34,7 @@ class User(Base):
             'name': self.name,
             'registered': self.registered,
             'completion_link': self.completion_link,
-            'profile_image_path': self.profile_image_path,
+            'profile_image_path': f"{BASE_URL}/users/{self.user_id}/image",
             'completed': self.completed,
             'surname': self.surname,
             'email': self.email,
