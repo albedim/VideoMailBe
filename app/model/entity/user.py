@@ -22,6 +22,7 @@ class User(Base):
     def __init__(self, registered, email, refreshToken):
         self.user_id = generateUuid()
         self.email = email
+        self.profile_image_path = "files/profileimages/default.png"
         self.completion_link = generateUuid(16)
         self.registered = registered
         self.completed = False

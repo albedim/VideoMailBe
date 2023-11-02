@@ -58,7 +58,7 @@ class ContactService:
                 raise ContactAlreadyExistsException()
 
             ContactRepository.create(request.user_id, contactUser.user_id)
-            return createSuccessResponse("Contact successfully created")
+            return cls.getContacts(user.user_id)
         except UserNotFoundException as exc:
             return createErrorResponse(UserNotFoundException)
         except UnAuthorizedException as exc:

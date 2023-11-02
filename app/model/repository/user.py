@@ -1,6 +1,7 @@
 from sqlalchemy import text
 
 from app.configuration.config import Base, sql
+from app.model.entity.sending import Sending
 from app.model.entity.user import User
 from app.utils.utils import generateUuid
 
@@ -67,4 +68,27 @@ class UserRepository:
         user.refresh_token = refreshToken
         user.registered = True
         sql.commit()
+        return user
+
+    @classmethod
+    def getReceivers(cls, videoMailId):
+        users = sql.query(User, text("receiver_type")).from_statement(
+            text("SELECT users.*, sendings.receiver_type "
+                 "FROM users "
+                 "JOIN sendings "
+                 "ON sendings.receiver_id = users.user_id "
+                 "WHERE sendings.videoMail_id = :videoMailId "
+                 "ORDER BY sendings.receiver_type DESC").params(videoMailId=videoMailId)
+        ).all()
+        return users
+
+    @classmethod
+    def getSender(cls, videoMailId):
+        user = sql.query(User).from_statement(
+            text("SELECT users.* "
+                 "FROM users "
+                 "JOIN sendings "
+                 "ON sendings.sender_id = users.user_id "
+                 "WHERE sendings.videoMail_id = :videoMailId").params(videoMailId=videoMailId)
+        ).first()
         return user

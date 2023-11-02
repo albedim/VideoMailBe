@@ -2,6 +2,7 @@ import datetime
 import os.path
 
 import cv2
+import jwt
 import requests
 import base64
 
@@ -18,7 +19,8 @@ from app.utils.errors.GException import GException
 from app.utils.errors.UnAuthotizedException import UnAuthorizedException
 from app.utils.errors.UserNotFoundException import UserNotFoundException
 from app.utils.errors.VideoMailNotFoundException import VideoMailNotFoundException
-from app.utils.utils import createSuccessResponse, createErrorResponse, generateUuid, getFormattedDateTime, BASE_URL
+from app.utils.utils import createSuccessResponse, createErrorResponse, generateUuid, getFormattedDateTime, BASE_URL, \
+    isTokenValid
 
 
 class VideoMailService:
@@ -92,6 +94,8 @@ class VideoMailService:
 
                 if response.status_code == 200:
                     receivers.append(receiver)
+                else:
+                    SendingRepository.remove(sending)
 
             if len(receivers) != len(request.receiver_emails):
                 if len(receivers) > 0:
@@ -126,8 +130,11 @@ class VideoMailService:
             videoMails = VideoMailRepository.getSentVideoMails(userId)
             res = []
             for videoMail in videoMails:
+                receivers = UserRepository.getReceivers(videoMail.videoMail_id)
+                for i in range(len(receivers)):
+                    receivers[i] = receivers[i][0].toJSON(receiver_type=receivers[i][1])
                 res.append(
-                    videoMail[0].toJSON(receiver=videoMail[1].toJSON())
+                    videoMail.toJSON(receivers=receivers)
                 )
 
             return createSuccessResponse({
@@ -252,12 +259,25 @@ class VideoMailService:
             print(f"Error: {str(e)}")
 
     @classmethod
-    def getVideo(cls, videoId):
+    def getVideo(cls, headers, videoId):
         videoMail = VideoMailRepository.getVideoMail(videoId)
 
         if videoMail is None:
             raise VideoMailNotFoundException()
 
-        return createSuccessResponse(videoMail.toJSON(
+        if not isTokenValid(headers):
+            return createSuccessResponse({
+                'authorized': True,
+                'pin_required': True,
+                'videoMail': videoMail.toJSON(
+                    path=f"{BASE_URL}/videoMails/videos/{videoMail.videoMail_id}")
+            })
+
+        tokenPayload = jwt.decode(headers.get("Authorization").split(" ")[1], key="super-secret")
+        authorized = UserService.isReceiverOrSender(tokenPayload['user_id'], videoId)
+        return createSuccessResponse({
+            'authorized': authorized,
+            'pin_required': False,
+            'videoMail': videoMail.toJSON(
             path=f"{BASE_URL}/videoMails/videos/{videoMail.videoMail_id}")
-        )
+        })

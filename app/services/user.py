@@ -11,10 +11,12 @@ from app.model.repository.user import UserRepository
 from app.utils.errors.FileNotFoundEcxeption import FileNotFoundException
 from app.utils.errors.GException import GException
 from app.utils.errors.RefreshTokenNeededExceptiom import RefreshTokenNeededException
+from app.utils.errors.TokenExpiredException import TokenExpiredException
 from app.utils.errors.UnAuthotizedException import UnAuthorizedException
 from app.utils.errors.UserNotCompletedException import UserNotCompletedException
 from app.utils.errors.UserNotFoundException import UserNotFoundException
-from app.utils.utils import createSuccessResponse, createErrorResponse, getClient, hashString, createJWTToken, BASE_URL
+from app.utils.utils import createSuccessResponse, createErrorResponse, getClient, hashString, createJWTToken, BASE_URL, \
+    isTokenValid
 
 
 class UserService:
@@ -39,7 +41,7 @@ class UserService:
         if 'error' in res and res['error'] == 'invalid_grant':
             return createErrorResponse(UnAuthorizedException)
 
-        userInformation = requests.get("https://oauth2.googleapis.com/tokeninfo?id_token="+res['id_token']).json()
+        userInformation = requests.get("https://oauth2.googleapis.com/tokeninfo?id_token=" + res['id_token']).json()
 
         user = UserRepository.getUserByEmail(userInformation['email'])
         if user is None:
@@ -95,7 +97,8 @@ class UserService:
                 raise UserNotFoundException()
             if request.profile_image is None:
                 request.profile_image = "files/profileimages/default.png"
-            user = UserRepository.completeUser(request.profile_image, request.name, request.surname, hashString(request.password), user)
+            user = UserRepository.completeUser(request.profile_image, request.name, request.surname,
+                                               hashString(request.password), user)
             return createSuccessResponse({
                 'token': createJWTToken({'user_id': user.user_id}, timedelta(days=4))
             })
@@ -140,15 +143,33 @@ class UserService:
             return createErrorResponse(UserNotFoundException)
 
     @classmethod
-    def sync(cls, token_data):
+    def sync(cls, token):
         try:
-            """
-            user = UserRepository.getUserById(token_data['user_id'])
+            if not isTokenValid(token):
+                raise UnAuthorizedException()
+            tokenPayload = jwt.decode(token.get("Authorization").split(" ")[1], key="super-secret")
+            user = UserRepository.getUserById(tokenPayload['user_id'])
             if user is None:
                 raise UserNotFoundException()
-            """
-            return createSuccessResponse(None)
+            return createSuccessResponse(True)
         except UserNotFoundException:
             return createErrorResponse(UserNotFoundException)
+        except jwt.exceptions.ExpiredSignatureError:
+            return createErrorResponse(TokenExpiredException())
+        except jwt.exceptions.DecodeError:
+            return createErrorResponse(UnAuthorizedException())
         except Exception as exc:
             return createErrorResponse(GException(exc))
+
+    @classmethod
+    def isReceiverOrSender(cls, userId, videoMailId):
+        receivers = UserRepository.getReceivers(videoMailId)
+        sender = UserRepository.getSender(videoMailId)
+        user = UserRepository.getUserById(userId)
+        isReceiver = False
+        for e in receivers:
+            if e[0].email == user.email:
+                isReceiver = True
+        if isReceiver:
+            return True
+        return user == sender

@@ -1,4 +1,4 @@
-from fastapi import APIRouter
+from fastapi import Request, APIRouter
 from pydantic import BaseModel
 from starlette.responses import FileResponse
 
@@ -33,8 +33,8 @@ def getReceivedVideoMails(userId: str):
 
 
 @videoMailRouter.get("/{videoId}")
-async def getVideoMail(videoId: str):
-    return VideoMailService.getVideo(videoId)
+async def getVideoMail(request: Request, videoId: str):
+    return VideoMailService.getVideo(request.headers, videoId)
 
 
 @videoMailRouter.get("/videos/{videoId}")

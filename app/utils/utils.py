@@ -97,4 +97,16 @@ def createJWTToken(data, expires_delta):
     return encoded_jwt
 
 
+def isTokenValid(headers):
+    try:
+        if headers.get("Authorization") is None:
+            return False
+        if 'Bearer' not in headers.get("Authorization"):
+            return False
+        tokenPayload = jwt.decode(headers.get("Authorization").split(" ")[1], key="super-secret")
+        return True
+    except Exception:
+        return False
+
+
 BASE_URL = getVariables('local')['BASE_URL']

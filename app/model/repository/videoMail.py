@@ -16,15 +16,12 @@ class VideoMailRepository:
 
     @classmethod
     def getSentVideoMails(cls, userId):
-        videoMails = sql.query(VideoMail, User).from_statement(
-            text("SELECT videoMails.*, users.* "
+        videoMails = sql.query(VideoMail).from_statement(
+            text("SELECT videoMails.* "
                  "FROM videoMails "
                  "JOIN sendings "
                  "ON videoMails.videoMail_id = sendings.videoMail_id "
-                 "JOIN users "
-                 "ON sendings.receiver_id = users.user_id "
-                 "WHERE sendings.receiver_type = 'cc' "
-                 "AND sendings.sender_id = :senderId "
+                 "WHERE sendings.sender_id = :senderId "
                  "ORDER BY videomails.sent_on DESC").params(senderId=userId)
         ).all()
         return videoMails

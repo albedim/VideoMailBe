@@ -11,3 +11,8 @@ class SendingRepository:
         sql.add(sending)
         sql.commit()
         return sending
+
+    @classmethod
+    def remove(cls, sending):
+        sql.delete(sending)
+        sql.commit()

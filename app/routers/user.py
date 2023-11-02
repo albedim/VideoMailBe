@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Request
 from starlette.responses import FileResponse
 
 from app.configuration.config import authjwt
@@ -34,5 +34,5 @@ async def getUserImage(userId: str):
 
 
 @userRouter.post("/sync")
-async def sync():
-    return UserService.sync("")
+async def sync(request: Request):
+    return UserService.sync(request.headers)
