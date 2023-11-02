@@ -109,4 +109,20 @@ def isTokenValid(headers):
         return False
 
 
+"""
+:description: Decodifica un video in base64 e lo salva
+:param videoPath: str
+:return: None
+"""
+
+
+def saveFile(base64Data, filePath):
+    try:
+        decoded_data = base64.b64decode(base64Data)
+        with open(filePath, 'wb') as file:
+            file.write(decoded_data)
+    except Exception as exc:
+        ...
+
+
 BASE_URL = getVariables('local')['BASE_URL']

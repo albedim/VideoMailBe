@@ -15,7 +15,7 @@ from app.utils.errors.NotFoundException import NotFoundException
 from app.utils.utils import createErrorResponse
 from routers.user import userRouter
 from routers.contact import contactRouter
-from app.configuration.config import Base, engine
+from app.configuration.config import Base, engine, sql
 
 app = FastAPI()
 

@@ -9,10 +9,13 @@ class VideoMailRepository:
 
     @classmethod
     def create(cls, subject, path):
-        videoMail: VideoMail = VideoMail(subject, path)
-        sql.add(videoMail)
-        sql.commit()
-        return videoMail
+        try:
+            videoMail: VideoMail = VideoMail(subject, path)
+            sql.add(videoMail)
+            sql.commit()
+            return videoMail
+        except Exception as exc:
+            sql.rollback()
 
     @classmethod
     def getSentVideoMails(cls, userId):

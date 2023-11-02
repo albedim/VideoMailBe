@@ -10,10 +10,13 @@ class UserRepository:
 
     @classmethod
     def create(cls, registered, email, refreshToken):
-        user: User = User(registered, email, refreshToken)
-        sql.add(user)
-        sql.commit()
-        return user
+        try:
+            user: User = User(registered, email, refreshToken)
+            sql.add(user)
+            sql.commit()
+            return user
+        except Exception as exc:
+            sql.rollback()
 
     @classmethod
     def getUserByEmail(cls, email):
@@ -22,9 +25,12 @@ class UserRepository:
 
     @classmethod
     def refreshToken(cls, user, token):
-        user.access_token = token
-        sql.commit()
-        return user.access_token
+        try:
+            user.access_token = token
+            sql.commit()
+            return user.access_token
+        except Exception as exc:
+            sql.rollback()
 
     @classmethod
     def getUserById(cls, user_id):
@@ -33,14 +39,18 @@ class UserRepository:
 
     @classmethod
     def completeUser(cls, profileImage, name, surname, password, user):
-        user.name = name
-        user.profile_image_path = profileImage
-        user.surname = surname
-        user.password = password
-        user.completed = True
-        user.completion_link = None
-        sql.commit()
-        return user
+        try:
+            user.name = name
+            user.profile_image_path = profileImage
+            user.surname = surname
+            user.password = password
+            user.completed = True
+            user.registered = True
+            user.completion_link = None
+            sql.commit()
+            return user
+        except Exception as exc:
+            sql.rollback()
 
     @classmethod
     def getUserByCompletionLink(cls, completion_link):
@@ -59,16 +69,20 @@ class UserRepository:
                  "FROM users "
                  "JOIN contacts "
                  "ON contacts.contact_id = users.user_id "
-                 "WHERE contacts.user_id = :userId").params(userId=userId)
+                 "WHERE contacts.user_id = :userId "
+                 "ORDER BY users.email ASC").params(userId=userId)
         ).all()
         return contacts
 
     @classmethod
     def registerUser(cls, user, refreshToken):
-        user.refresh_token = refreshToken
-        user.registered = True
-        sql.commit()
-        return user
+        try:
+            user.refresh_token = refreshToken
+            user.registered = True
+            sql.commit()
+            return user
+        except Exception as exc:
+            sql.rollback()
 
     @classmethod
     def getReceivers(cls, videoMailId):

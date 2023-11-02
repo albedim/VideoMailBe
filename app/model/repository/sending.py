@@ -7,12 +7,18 @@ class SendingRepository:
 
     @classmethod
     def create(cls, receiverType, videoMailId, receiverId, senderId):
-        sending: Sending = Sending(receiverType, senderId, receiverId, videoMailId)
-        sql.add(sending)
-        sql.commit()
-        return sending
+        try:
+            sending: Sending = Sending(receiverType, senderId, receiverId, videoMailId)
+            sql.add(sending)
+            sql.commit()
+            return sending
+        except Exception as exc:
+            sql.rollback()
 
     @classmethod
     def remove(cls, sending):
-        sql.delete(sending)
-        sql.commit()
+        try:
+            sql.delete(sending)
+            sql.commit()
+        except Exception as exc:
+            sql.rollback()

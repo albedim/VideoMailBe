@@ -16,7 +16,7 @@ from app.utils.errors.UnAuthotizedException import UnAuthorizedException
 from app.utils.errors.UserNotCompletedException import UserNotCompletedException
 from app.utils.errors.UserNotFoundException import UserNotFoundException
 from app.utils.utils import createSuccessResponse, createErrorResponse, getClient, hashString, createJWTToken, BASE_URL, \
-    isTokenValid
+    isTokenValid, saveFile, getFormattedDateTime
 
 
 class UserService:
@@ -56,14 +56,14 @@ class UserService:
     @classmethod
     def getUser(cls, userId):
         try:
-
             user = UserRepository.getUserById(userId)
             if user is None:
                 raise UserNotFoundException()
             return createSuccessResponse(user.toJSON())
-
         except UserNotFoundException:
             return createErrorResponse(UserNotFoundException)
+        except Exception as exc:
+            return createErrorResponse(GException(exc))
 
     @classmethod
     def signin(cls, request):
@@ -95,9 +95,13 @@ class UserService:
 
             if user is None:
                 raise UserNotFoundException()
-            if request.profile_image is None:
-                request.profile_image = "files/profileimages/default.png"
-            user = UserRepository.completeUser(request.profile_image, request.name, request.surname,
+            profileImage = "files/profileimages/default.png"
+            if request.profile_image != "":
+                imageName = getFormattedDateTime() + ".png"
+                profileImage = f"files/profileimages/{imageName}"
+                saveFile(request.profile_image, profileImage)
+
+            user = UserRepository.completeUser(profileImage, request.name, request.surname,
                                                hashString(request.password), user)
             return createSuccessResponse({
                 'token': createJWTToken({'user_id': user.user_id}, timedelta(days=4))
@@ -132,6 +136,7 @@ class UserService:
     def getUserImage(cls, userId):
         try:
             user = UserRepository.getUserById(userId)
+            print(user.toJSON())
             if user is None:
                 raise UserNotFoundException()
             if os.path.exists(user.profile_image_path):
@@ -159,6 +164,7 @@ class UserService:
         except jwt.exceptions.DecodeError:
             return createErrorResponse(UnAuthorizedException())
         except Exception as exc:
+            print(exc)
             return createErrorResponse(GException(exc))
 
     @classmethod

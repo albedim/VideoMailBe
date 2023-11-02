@@ -8,15 +8,21 @@ class ContactRepository:
 
     @classmethod
     def create(cls, userId, contactId):
-        contact: Contact = Contact(userId, contactId)
-        sql.add(contact)
-        sql.commit()
-        return contact
+        try:
+            contact: Contact = Contact(userId, contactId)
+            sql.add(contact)
+            sql.commit()
+            return contact
+        except Exception as exc:
+            sql.rollback()
 
     @classmethod
     def remove(cls, contact):
-        sql.delete(contact)
-        sql.commit()
+        try:
+            sql.delete(contact)
+            sql.commit()
+        except Exception as exc:
+            sql.rollback()
 
     @classmethod
     def getContact(cls, user_id, contactId):

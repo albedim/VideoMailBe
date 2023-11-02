@@ -20,7 +20,7 @@ from app.utils.errors.UnAuthotizedException import UnAuthorizedException
 from app.utils.errors.UserNotFoundException import UserNotFoundException
 from app.utils.errors.VideoMailNotFoundException import VideoMailNotFoundException
 from app.utils.utils import createSuccessResponse, createErrorResponse, generateUuid, getFormattedDateTime, BASE_URL, \
-    isTokenValid
+    isTokenValid, saveFile
 
 
 class VideoMailService:
@@ -38,19 +38,21 @@ class VideoMailService:
 
             videoName = getFormattedDateTime()
             videoPath = "files/videomails/" + videoName + ".webm"
-            cls.saveFile(request.video, videoPath)
+            saveFile(request.video, videoPath)
             # cls.extractVideoCover(videoPath, "")
             videoMail = VideoMailRepository.create(request.subject, videoPath)
 
             html_content = '''
                 <html>
                     <body>
-                        <h1>Your Video Email</h1>
-                        <p>Video-email #334 by Alberto Di Maio</p>
+                        <h1>VideoMail #'''+videoMail.videoMail_id+'''</h1>
+                        <p>Ti è stato mandato un nuovo VideoMail da '''+ user.name + ' ' + user.surname+'''</p>
                         <video width="320" height="240" controls>
                             <source src="http://localhost:8000/videoMails/videos/''' + videoMail.videoMail_id + '''" type="video/webm">
                             <div>
-                                <p>Il tuo client non è supportato, perciò dovrai scaricare l'app per vedere il video-email</p>
+                                <p>Il tuo client non è supportato, perciò dovrai scaricare l'app per vedere il VideoMail <br> 
+                                Ecco il pin di accesso nel caso ti dovesse essere richiesto</p>
+                                <h2>'''+videoMail.code+'''</h2>
                                 <a href="http://localhost:3000/videoMails/'''+videoMail.videoMail_id+'''">
                                     <img src="http://localhost:8000/videoMails/covers/''' + videoMail.videoMail_id + '''">
                                 </a>
@@ -203,21 +205,6 @@ class VideoMailService:
                                 media_type='image/png')
         else:
             return createErrorResponse(FileNotFoundException)
-
-    """
-    :description: Decodifica un video in base64 e lo salva
-    :param videoPath: str
-    :return: None
-    """
-
-    @classmethod
-    def saveFile(cls, base64Data, filePath):
-        try:
-            decoded_data = base64.b64decode(base64Data)
-            with open(filePath, 'wb') as file:
-                file.write(decoded_data)
-        except Exception as exc:
-            ...
 
     """
     :description: Estrae un frame da un video e lo salva come file jpeg

@@ -77,7 +77,7 @@ class ContactService:
                 raise ContactNotFoundException()
 
             ContactRepository.remove(contact)
-            return createSuccessResponse("Contact successfully removed")
+            return cls.getContacts(user_id)
         except ContactNotFoundException as exc:
             return createErrorResponse(ContactNotFoundException)
         except Exception as exc:
