@@ -66,6 +66,7 @@ class ContactService:
         except ContactAlreadyExistsException as exc:
             return createErrorResponse(ContactAlreadyExistsException)
         except Exception as exc:
+            print(exc)
             return createErrorResponse(GException(exc))
 
     @classmethod

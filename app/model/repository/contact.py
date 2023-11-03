@@ -2,27 +2,22 @@ from sqlalchemy import text
 
 from app.configuration.config import Base, sql
 from app.model.entity.contact import Contact
+from app.model.repository.repo import Repository
 
 
-class ContactRepository:
+class ContactRepository(Repository):
 
     @classmethod
     def create(cls, userId, contactId):
-        try:
-            contact: Contact = Contact(userId, contactId)
-            sql.add(contact)
-            sql.commit()
-            return contact
-        except Exception as exc:
-            sql.rollback()
+        contact: Contact = Contact(userId, contactId)
+        sql.add(contact)
+        Repository.commit()
+        return contact
 
     @classmethod
     def remove(cls, contact):
-        try:
-            sql.delete(contact)
-            sql.commit()
-        except Exception as exc:
-            sql.rollback()
+        sql.delete(contact)
+        Repository.commit()
 
     @classmethod
     def getContact(cls, user_id, contactId):

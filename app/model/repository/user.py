@@ -3,20 +3,18 @@ from sqlalchemy import text
 from app.configuration.config import Base, sql
 from app.model.entity.sending import Sending
 from app.model.entity.user import User
+from app.model.repository.repo import Repository
 from app.utils.utils import generateUuid
 
 
-class UserRepository:
+class UserRepository(Repository):
 
     @classmethod
     def create(cls, registered, email, refreshToken):
-        try:
-            user: User = User(registered, email, refreshToken)
-            sql.add(user)
-            sql.commit()
-            return user
-        except Exception as exc:
-            sql.rollback()
+        user: User = User(registered, email, refreshToken)
+        sql.add(user)
+        Repository.commit()
+        return user
 
     @classmethod
     def getUserByEmail(cls, email):
@@ -25,12 +23,9 @@ class UserRepository:
 
     @classmethod
     def refreshToken(cls, user, token):
-        try:
-            user.access_token = token
-            sql.commit()
-            return user.access_token
-        except Exception as exc:
-            sql.rollback()
+        user.access_token = token
+        Repository.commit()
+        return user.access_token
 
     @classmethod
     def getUserById(cls, user_id):
@@ -39,17 +34,14 @@ class UserRepository:
 
     @classmethod
     def completeUser(cls, profileImage, name, surname, password, user):
-        try:
-            user.name = name
-            user.profile_image_path = profileImage
-            user.surname = surname
-            user.password = password
-            user.completed = True
-            user.completion_link = None
-            sql.commit()
-            return user
-        except Exception as exc:
-            sql.rollback()
+        user.name = name
+        user.profile_image_path = profileImage
+        user.surname = surname
+        user.password = password
+        user.completed = True
+        user.completion_link = None
+        Repository.commit()
+        return user
 
     @classmethod
     def getUserByCompletionLink(cls, completion_link):
@@ -75,19 +67,16 @@ class UserRepository:
 
     @classmethod
     def registerUser(cls, user, refreshToken):
-        try:
-            user.refresh_token = refreshToken
-            user.registered = True
-            user = cls.setCompletionLink(user)
-            sql.commit()
-            return user
-        except Exception as exc:
-            sql.rollback()
+        user.refresh_token = refreshToken
+        user.registered = True
+        user = cls.setCompletionLink(user)
+        Repository.commit()
+        return user
 
     @classmethod
     def setCompletionLink(cls, user):
         user.completion_link = generateUuid(16)
-        sql.commit()
+        Repository.commit()
         return user
 
     @classmethod

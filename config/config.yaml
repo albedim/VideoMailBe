@@ -5,7 +5,7 @@ datasources:
     password: videoMail2023!
     host: localhost
     port: 3306
-    db: videoMail
+    db: videomail1
 
 client:
   client_id: 651229141185-egfqcebnr2a5bdll5r04lfrg1t03fms1.apps.googleusercontent.com

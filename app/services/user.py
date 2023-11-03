@@ -52,6 +52,7 @@ class UserService:
             createdUser = UserRepository.setCompletionLink(createdUser)
         else:
             createdUser = UserRepository.registerUser(user, res['refresh_token'])
+            createdUser = UserRepository.setCompletionLink(createdUser)
 
         return createSuccessResponse({
             'complete_account_code': createdUser.completion_link
@@ -67,7 +68,7 @@ class UserService:
             return createSuccessResponse({
                 'sent_videoMails': videoMails,
                 'from': str(user.created_on),
-                'to': str(datetime.datetime.now())
+                'to': str(datetime.datetime.now()).split(".")[0]
             })
         except UserNotFoundException:
             return createErrorResponse(UserNotFoundException)

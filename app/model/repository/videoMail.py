@@ -3,19 +3,17 @@ from sqlalchemy import text
 from app.configuration.config import Base, sql
 from app.model.entity.user import User
 from app.model.entity.videoMail import VideoMail
+from app.model.repository.repo import Repository
 
 
-class VideoMailRepository:
+class VideoMailRepository(Repository):
 
     @classmethod
     def create(cls, subject, path):
-        try:
-            videoMail: VideoMail = VideoMail(subject, path)
-            sql.add(videoMail)
-            sql.commit()
-            return videoMail
-        except Exception as exc:
-            sql.rollback()
+        videoMail: VideoMail = VideoMail(subject, path)
+        sql.add(videoMail)
+        Repository.commit()
+        return videoMail
 
     @classmethod
     def getSentVideoMails(cls, userId):
@@ -53,7 +51,6 @@ class VideoMailRepository:
                  "WHERE sendings.receiver_id = :senderId "
                  "ORDER BY videomails.sent_on DESC").params(senderId=userId)
         ).all()
-        print(videoMails)
         return videoMails
 
     @classmethod
@@ -69,7 +66,6 @@ class VideoMailRepository:
                  "AND sendings.favorite = true "
                  "ORDER BY videomails.sent_on DESC").params(senderId=userId)
         ).all()
-        print(videoMails)
         return videoMails
 
     @classmethod

@@ -1,27 +1,22 @@
 from app.configuration.config import Base, sql
 from app.model.entity.user import User
 from app.model.entity.sending import Sending
+from app.model.repository.repo import Repository
 
 
-class SendingRepository:
+class SendingRepository(Repository):
 
     @classmethod
     def create(cls, receiverType, videoMailId, receiverId, senderId):
-        try:
-            sending: Sending = Sending(receiverType, senderId, receiverId, videoMailId)
-            sql.add(sending)
-            sql.commit()
-            return sending
-        except Exception as exc:
-            sql.rollback()
+        sending: Sending = Sending(receiverType, senderId, receiverId, videoMailId)
+        sql.add(sending)
+        Repository.commit()
+        return sending
 
     @classmethod
     def remove(cls, sending):
-        try:
-            sql.delete(sending)
-            sql.commit()
-        except Exception as exc:
-            sql.rollback()
+        sql.delete(sending)
+        Repository.commit()
 
     @classmethod
     def get(cls, user_id, videoMail_id):
@@ -31,5 +26,5 @@ class SendingRepository:
     @classmethod
     def favorite(cls, sending):
         sending.favorite = not sending.favorite
-        sql.commit()
+        Repository.commit()
         return sending
