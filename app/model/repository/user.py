@@ -45,7 +45,6 @@ class UserRepository:
             user.surname = surname
             user.password = password
             user.completed = True
-            user.registered = True
             user.completion_link = None
             sql.commit()
             return user
@@ -79,10 +78,17 @@ class UserRepository:
         try:
             user.refresh_token = refreshToken
             user.registered = True
+            user = cls.setCompletionLink(user)
             sql.commit()
             return user
         except Exception as exc:
             sql.rollback()
+
+    @classmethod
+    def setCompletionLink(cls, user):
+        user.completion_link = generateUuid(16)
+        sql.commit()
+        return user
 
     @classmethod
     def getReceivers(cls, videoMailId):

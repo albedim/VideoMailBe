@@ -43,8 +43,8 @@ class VideoMailRepository:
 
     @classmethod
     def getReceivedVideoMails(cls, userId):
-        videoMails = sql.query(VideoMail, User).from_statement(
-            text("SELECT videoMails.*, users.* "
+        videoMails = sql.query(VideoMail, User, text("favorite")).from_statement(
+            text("SELECT videoMails.*, users.*, sendings.favorite "
                  "FROM videoMails "
                  "JOIN sendings "
                  "ON videoMails.videoMail_id = sendings.videoMail_id "
@@ -53,6 +53,23 @@ class VideoMailRepository:
                  "WHERE sendings.receiver_id = :senderId "
                  "ORDER BY videomails.sent_on DESC").params(senderId=userId)
         ).all()
+        print(videoMails)
+        return videoMails
+
+    @classmethod
+    def getFavoritedVideoMails(cls, userId):
+        videoMails = sql.query(VideoMail, User).from_statement(
+            text("SELECT videoMails.*, users.*"
+                 "FROM videoMails "
+                 "JOIN sendings "
+                 "ON videoMails.videoMail_id = sendings.videoMail_id "
+                 "JOIN users "
+                 "ON sendings.sender_id = users.user_id "
+                 "WHERE sendings.receiver_id = :senderId "
+                 "AND sendings.favorite = true "
+                 "ORDER BY videomails.sent_on DESC").params(senderId=userId)
+        ).all()
+        print(videoMails)
         return videoMails
 
     @classmethod

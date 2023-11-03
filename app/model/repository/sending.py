@@ -22,3 +22,14 @@ class SendingRepository:
             sql.commit()
         except Exception as exc:
             sql.rollback()
+
+    @classmethod
+    def get(cls, user_id, videoMail_id):
+        sending = sql.query(Sending).filter(Sending.receiver_id == user_id).filter(Sending.videoMail_id == videoMail_id).first()
+        return sending
+
+    @classmethod
+    def favorite(cls, sending):
+        sending.favorite = not sending.favorite
+        sql.commit()
+        return sending

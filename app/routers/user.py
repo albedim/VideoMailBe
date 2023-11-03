@@ -23,6 +23,11 @@ async def auth(request: UserAuthSchema):
     return UserService.auth(request)
 
 
+@userRouter.get("/{userId}/stats")
+async def getUserStats(userId: str):
+    return UserService.getUserStats(userId)
+
+
 @userRouter.get("/{userId}")
 async def getUser(userId: str):
     return UserService.getUser(userId)

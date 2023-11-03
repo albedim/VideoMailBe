@@ -1,3 +1,4 @@
+import datetime
 import os
 from datetime import timedelta
 
@@ -7,7 +8,9 @@ from google.oauth2 import id_token
 from starlette.responses import FileResponse
 
 from app.model.entity.user import User
+from app.model.repository.sending import SendingRepository
 from app.model.repository.user import UserRepository
+from app.model.repository.videoMail import VideoMailRepository
 from app.utils.errors.FileNotFoundEcxeption import FileNotFoundException
 from app.utils.errors.GException import GException
 from app.utils.errors.RefreshTokenNeededExceptiom import RefreshTokenNeededException
@@ -46,12 +49,30 @@ class UserService:
         user = UserRepository.getUserByEmail(userInformation['email'])
         if user is None:
             createdUser = UserRepository.create(True, userInformation['email'], res['refresh_token'])
+            createdUser = UserRepository.setCompletionLink(createdUser)
         else:
             createdUser = UserRepository.registerUser(user, res['refresh_token'])
 
         return createSuccessResponse({
             'complete_account_code': createdUser.completion_link
         })
+
+    @classmethod
+    def getUserStats(cls, userId):
+        try:
+            user = UserRepository.getUserById(userId)
+            if user is None:
+                raise UserNotFoundException()
+            videoMails = len(VideoMailRepository.getSentVideoMails(userId))
+            return createSuccessResponse({
+                'sent_videoMails': videoMails,
+                'from': str(user.created_on),
+                'to': str(datetime.datetime.now())
+            })
+        except UserNotFoundException:
+            return createErrorResponse(UserNotFoundException)
+        except Exception as exc:
+            return createErrorResponse(GException(exc))
 
     @classmethod
     def getUser(cls, userId):
@@ -94,6 +115,10 @@ class UserService:
             user = UserRepository.getUserByCompletionLink(request.completion_link)
 
             if user is None:
+                raise UserNotFoundException()
+            if not user.registered:
+                raise UnAuthorizedException()
+            if user.completed:
                 raise UserNotFoundException()
             profileImage = "files/profileimages/default.png"
             if request.profile_image != "":

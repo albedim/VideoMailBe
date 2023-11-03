@@ -2,7 +2,7 @@ from fastapi import Request, APIRouter
 from pydantic import BaseModel
 from starlette.responses import FileResponse
 
-from app.schema.schema import EmailSentSchema
+from app.schema.schema import EmailSentSchema, FavoriteVideoMailSchema
 from app.services.videoMail import VideoMailService
 from app.utils.utils import BASE_URL
 
@@ -25,6 +25,16 @@ def getVideoMails(userId: str):
 @videoMailRouter.get("/user/{userId}/sent")
 def getSentVideoMails(userId: str):
     return VideoMailService.getSentVideoMails(userId)
+
+
+@videoMailRouter.post("/favorite")
+def favoriteVideoMail(request: FavoriteVideoMailSchema):
+    return VideoMailService.favourite(request)
+
+
+@videoMailRouter.get("/user/{userId}/favorited")
+def getReceivedVideoMails(userId: str):
+    return VideoMailService.getFavoritedVideoMails(userId)
 
 
 @videoMailRouter.get("/user/{userId}/received")

@@ -159,7 +159,7 @@ class VideoMailService:
             res = []
             for videoMail in videoMails:
                 res.append(
-                    videoMail[0].toJSON(sender=videoMail[1].toJSON())
+                    videoMail[0].toJSON(favorite=bool(videoMail[2]), sender=videoMail[1].toJSON())
                 )
 
             return createSuccessResponse({
@@ -169,6 +169,7 @@ class VideoMailService:
         except UserNotFoundException as exc:
             return createErrorResponse(UserNotFoundException)
         except Exception as exc:
+            print(exc)
             return createErrorResponse(GException(exc))
 
     """
@@ -268,3 +269,39 @@ class VideoMailService:
             'videoMail': videoMail.toJSON(
             path=f"{BASE_URL}/videoMails/videos/{videoMail.videoMail_id}")
         })
+
+    @classmethod
+    def favourite(cls, request):
+        videoMail = VideoMailRepository.getVideoMail(request.videoMail_id)
+
+        if videoMail is None:
+            raise VideoMailNotFoundException()
+
+        sending = SendingRepository.get(request.user_id, request.videoMail_id)
+        SendingRepository.favorite(sending)
+
+        return createSuccessResponse("Favorite")
+
+    @classmethod
+    def getFavoritedVideoMails(cls, userId):
+        try:
+            user = UserRepository.getUserById(userId)
+            if user is None:
+                raise UserNotFoundException()
+
+            videoMails = VideoMailRepository.getFavoritedVideoMails(userId)
+            res = []
+            for videoMail in videoMails:
+                res.append(
+                    videoMail[0].toJSON(sender=videoMail[1].toJSON())
+                )
+
+            return createSuccessResponse({
+                'receiver': user.toJSON(),
+                'videoMails': res
+            })
+        except UserNotFoundException as exc:
+            return createErrorResponse(UserNotFoundException)
+        except Exception as exc:
+            print(exc)
+            return createErrorResponse(GException(exc))

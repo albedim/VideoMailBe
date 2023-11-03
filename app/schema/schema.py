@@ -41,3 +41,8 @@ class ContactCreateSchema(BaseModel):
 
 class TokenData(BaseModel):
     user_id: str
+
+
+class FavoriteVideoMailSchema(BaseModel):
+    user_id: str
+    videoMail_id: str
