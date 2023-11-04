@@ -10,13 +10,13 @@ class SendingRepository(Repository):
     def create(cls, receiverType, videoMailId, receiverId, senderId):
         sending: Sending = Sending(receiverType, senderId, receiverId, videoMailId)
         sql.add(sending)
-        Repository.commit()
+        cls.commit()
         return sending
 
     @classmethod
     def remove(cls, sending):
         sql.delete(sending)
-        Repository.commit()
+        cls.commit()
 
     @classmethod
     def get(cls, user_id, videoMail_id):
@@ -26,5 +26,5 @@ class SendingRepository(Repository):
     @classmethod
     def favorite(cls, sending):
         sending.favorite = not sending.favorite
-        Repository.commit()
+        cls.commit()
         return sending

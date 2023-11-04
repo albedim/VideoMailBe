@@ -7,7 +7,9 @@ import requests
 from google.oauth2 import id_token
 from starlette.responses import FileResponse
 
+from app.configuration.config import sql
 from app.model.entity.user import User
+from app.model.repository.repo import Repository
 from app.model.repository.sending import SendingRepository
 from app.model.repository.user import UserRepository
 from app.model.repository.videoMail import VideoMailRepository
@@ -74,6 +76,8 @@ class UserService:
             return createErrorResponse(UserNotFoundException)
         except Exception as exc:
             return createErrorResponse(GException(exc))
+        finally:
+            Repository.endTransactions()
 
     @classmethod
     def getUser(cls, userId):
@@ -86,6 +90,8 @@ class UserService:
             return createErrorResponse(UserNotFoundException)
         except Exception as exc:
             return createErrorResponse(GException(exc))
+        finally:
+            Repository.endTransactions()
 
     @classmethod
     def signin(cls, request):
@@ -109,6 +115,8 @@ class UserService:
             return createErrorResponse(UserNotCompletedException)
         except Exception as exc:
             return createErrorResponse(GException(exc))
+        finally:
+            Repository.endTransactions()
 
     @classmethod
     def completeUser(cls, request):
@@ -139,6 +147,8 @@ class UserService:
             return createErrorResponse(UnAuthorizedException)
         except Exception as exc:
             return createErrorResponse(GException(exc))
+        finally:
+            Repository.endTransactions()
 
     @classmethod
     def refreshToken(
@@ -172,6 +182,8 @@ class UserService:
                 return createErrorResponse(FileNotFoundException)
         except UserNotFoundException:
             return createErrorResponse(UserNotFoundException)
+        finally:
+            Repository.endTransactions()
 
     @classmethod
     def sync(cls, token):
@@ -192,6 +204,8 @@ class UserService:
         except Exception as exc:
             print(exc)
             return createErrorResponse(GException(exc))
+        finally:
+            Repository.endTransactions()
 
     @classmethod
     def isReceiverOrSender(cls, userId, videoMailId):

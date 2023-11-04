@@ -9,3 +9,7 @@ class Repository:
             sql.commit()
         except Exception as exc:
             sql.rollback()
+
+    @classmethod
+    def endTransactions(cls):
+        sql.close()

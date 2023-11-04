@@ -11,13 +11,13 @@ class ContactRepository(Repository):
     def create(cls, userId, contactId):
         contact: Contact = Contact(userId, contactId)
         sql.add(contact)
-        Repository.commit()
+        cls.commit()
         return contact
 
     @classmethod
     def remove(cls, contact):
         sql.delete(contact)
-        Repository.commit()
+        cls.commit()
 
     @classmethod
     def getContact(cls, user_id, contactId):

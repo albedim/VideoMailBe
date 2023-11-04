@@ -2,7 +2,7 @@ from http.client import HTTPException
 
 import uvicorn
 
-from fastapi import FastAPI
+from fastapi import Request, FastAPI
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 from starlette.middleware.cors import CORSMiddleware
@@ -12,7 +12,7 @@ from app.routers.test import test
 from app.routers.videoMail import videoMailRouter
 from app.utils.errors.MethodNotAllowedException import MethodNotAllowedException
 from app.utils.errors.NotFoundException import NotFoundException
-from app.utils.utils import createErrorResponse
+from app.utils.utils import createErrorResponse, BASE_URL
 from routers.user import userRouter
 from routers.contact import contactRouter
 from app.configuration.config import Base, engine, sql
@@ -28,7 +28,7 @@ app.include_router(videoMailRouter, prefix="/videoMails")
 origins = [
     "http://localhost",
     "http://localhost:3000",
-    "https://yourfrontendapp.com",
+    "https://videomail.pages.dev",
 ]
 
 app.add_middleware(
@@ -41,8 +41,8 @@ app.add_middleware(
 
 
 @app.get("/")
-async def read_root():
-    return {"Benvenuto": "VideoMail"}
+async def read_root(request: Request):
+    return {'documentation': f"{BASE_URL}/docs"}
 
 
 @app.exception_handler(404)

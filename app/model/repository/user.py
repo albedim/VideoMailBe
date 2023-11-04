@@ -13,7 +13,7 @@ class UserRepository(Repository):
     def create(cls, registered, email, refreshToken):
         user: User = User(registered, email, refreshToken)
         sql.add(user)
-        Repository.commit()
+        cls.commit()
         return user
 
     @classmethod
@@ -24,7 +24,7 @@ class UserRepository(Repository):
     @classmethod
     def refreshToken(cls, user, token):
         user.access_token = token
-        Repository.commit()
+        cls.commit()
         return user.access_token
 
     @classmethod
@@ -40,7 +40,7 @@ class UserRepository(Repository):
         user.password = password
         user.completed = True
         user.completion_link = None
-        Repository.commit()
+        cls.commit()
         return user
 
     @classmethod
@@ -70,13 +70,13 @@ class UserRepository(Repository):
         user.refresh_token = refreshToken
         user.registered = True
         user = cls.setCompletionLink(user)
-        Repository.commit()
+        cls.commit()
         return user
 
     @classmethod
     def setCompletionLink(cls, user):
         user.completion_link = generateUuid(16)
-        Repository.commit()
+        cls.commit()
         return user
 
     @classmethod

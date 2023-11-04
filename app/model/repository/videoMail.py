@@ -12,7 +12,7 @@ class VideoMailRepository(Repository):
     def create(cls, subject, path):
         videoMail: VideoMail = VideoMail(subject, path)
         sql.add(videoMail)
-        Repository.commit()
+        cls.commit()
         return videoMail
 
     @classmethod

@@ -8,6 +8,8 @@ import base64
 
 from starlette.responses import FileResponse
 
+from app.configuration.config import sql
+from app.model.repository.repo import Repository
 from app.model.repository.sending import SendingRepository
 from app.model.repository.videoMail import VideoMailRepository
 from app.model.repository.user import UserRepository
@@ -121,6 +123,8 @@ class VideoMailService:
             return createErrorResponse(EmailNotSentException)
         except Exception as exc:
             return createErrorResponse(GException(exc))
+        finally:
+            Repository.endTransactions()
 
     @classmethod
     def getSentVideoMails(cls, userId):
@@ -147,6 +151,8 @@ class VideoMailService:
             return createErrorResponse(UserNotFoundException)
         except Exception as exc:
             return createErrorResponse(GException(exc))
+        finally:
+            Repository.endTransactions()
 
     @classmethod
     def getReceivedVideoMails(cls, userId):
@@ -169,9 +175,9 @@ class VideoMailService:
         except UserNotFoundException as exc:
             return createErrorResponse(UserNotFoundException)
         except Exception as exc:
-            print(exc)
             return createErrorResponse(GException(exc))
-
+        finally:
+            Repository.endTransactions()
     """
     :description: Crea una file response di un video
     :param videoName: str
@@ -190,7 +196,8 @@ class VideoMailService:
                 return createErrorResponse(FileNotFoundException)
         except Exception as exc:
             return createErrorResponse(GException(exc))
-
+        finally:
+            Repository.endTransactions()
     """
     :description: Crea una file response della copertina di un video
     :param videoName: str
@@ -272,15 +279,20 @@ class VideoMailService:
 
     @classmethod
     def favourite(cls, request):
-        videoMail = VideoMailRepository.getVideoMail(request.videoMail_id)
+        try:
+            videoMail = VideoMailRepository.getVideoMail(request.videoMail_id)
 
-        if videoMail is None:
-            raise VideoMailNotFoundException()
+            if videoMail is None:
+                raise VideoMailNotFoundException()
 
-        sending = SendingRepository.get(request.user_id, request.videoMail_id)
-        SendingRepository.favorite(sending)
+            sending = SendingRepository.get(request.user_id, request.videoMail_id)
+            SendingRepository.favorite(sending)
 
-        return createSuccessResponse("Favorite")
+            return createSuccessResponse("Favorite")
+        except VideoMailNotFoundException:
+            return createErrorResponse(VideoMailNotFoundException)
+        except Exception as exc:
+            return createErrorResponse(GException(exc))
 
     @classmethod
     def getFavoritedVideoMails(cls, userId):
@@ -305,3 +317,5 @@ class VideoMailService:
         except Exception as exc:
             print(exc)
             return createErrorResponse(GException(exc))
+        finally:
+            Repository.endTransactions()
