@@ -104,7 +104,7 @@ class UserService:
                 raise UserNotCompletedException()
             if user.password == hashString(request.password):
                 return createSuccessResponse({
-                    'token': createJWTToken({'user_id': user.user_id}, timedelta(days=4))
+                    'token': createJWTToken({'user_id': user.user_id, 'expires_in': 14}, timedelta(days=14))
                 })
             else:
                 raise UserNotFoundException()
@@ -138,7 +138,7 @@ class UserService:
             user = UserRepository.completeUser(profileImage, request.name, request.surname,
                                                hashString(request.password), user)
             return createSuccessResponse({
-                'token': createJWTToken({'user_id': user.user_id}, timedelta(days=4))
+                'token': createJWTToken({'user_id': user.user_id, 'expires_in': 14}, timedelta(days=14))
             })
 
         except UserNotFoundException as exc:
