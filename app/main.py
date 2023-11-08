@@ -1,60 +1,31 @@
-from http.client import HTTPException
+from flask import Flask, jsonify
+from flask_sqlalchemy import SQLAlchemy
+from flask_cors import CORS
 
-import uvicorn
-
-from fastapi import Request, FastAPI
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, declarative_base
-from starlette.middleware.cors import CORSMiddleware
-
-from app.routers.sending import sendingRouter
-from app.routers.test import test
-from app.routers.videoMail import videoMailRouter
-from app.utils.errors.MethodNotAllowedException import MethodNotAllowedException
-from app.utils.errors.NotFoundException import NotFoundException
-from app.utils.utils import createErrorResponse, BASE_URL
-from routers.user import userRouter
-from routers.contact import contactRouter
-from app.configuration.config import Base, engine, sql
-
-app = FastAPI()
-
-app.include_router(userRouter, prefix="/users")
-app.include_router(test, prefix="/test")
-app.include_router(contactRouter, prefix="/contacts")
-app.include_router(sendingRouter, prefix="/sendings")
-app.include_router(videoMailRouter, prefix="/videoMails")
-
-origins = [
-    "http://localhost",
-    "http://localhost:3000",
-    "https://videomail.pages.dev",
-]
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+from app.configuration.config import sql, app
+from app.routers import contact, user, sending, videoMail
+from app.utils.utils import BASE_URL
 
 
-@app.get("/")
-async def read_root(request: Request):
-    return {'documentation': f"{BASE_URL}/docs"}
+app.register_blueprint(contact.contactRouter)
+app.register_blueprint(user.userRouter)
+app.register_blueprint(sending.sendingRouter)
+app.register_blueprint(videoMail.videoMailRouter)
+
+CORS(app, resources={r"*": {"origins": ["http://localhost", "http://localhost:3000", "https://videomailfe.pages.dev"]}})
 
 
-@app.exception_handler(404)
-async def custom_404_middleware(request, call_next):
-    return createErrorResponse(NotFoundException)
+@app.route("/")
+def read_root():
+    return jsonify({'documentation': f"{BASE_URL}/docs"})
 
 
-@app.exception_handler(405)
-async def custom_405_middleware(request, call_next):
-    return createErrorResponse(MethodNotAllowedException)
+def create_app():
+    with app.app_context():
+        sql.create_all()
+    return app
 
 
 if __name__ == "__main__":
-    Base.metadata.create_all(bind=engine)
-    uvicorn.run(app, port=8000)
+    with app.app_context():
+        create_app().run(port=8000)

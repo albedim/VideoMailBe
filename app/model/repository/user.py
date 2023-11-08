@@ -1,6 +1,6 @@
 from sqlalchemy import text
 
-from app.configuration.config import Base, sql
+from app.configuration.config import sql
 from app.model.entity.sending import Sending
 from app.model.entity.user import User
 from app.model.repository.repo import Repository
@@ -18,7 +18,7 @@ class UserRepository(Repository):
 
     @classmethod
     def getUserByEmail(cls, email):
-        user = sql.query(User).filter(User.email == email).first()
+        user = sql.session.query(User).filter(User.email == email).first()
         return user
 
     @classmethod
@@ -29,7 +29,7 @@ class UserRepository(Repository):
 
     @classmethod
     def getUserById(cls, user_id):
-        user = sql.query(User).filter(User.user_id == user_id).first()
+        user = sql.session.query(User).filter(User.user_id == user_id).first()
         return user
 
     @classmethod
@@ -45,17 +45,17 @@ class UserRepository(Repository):
 
     @classmethod
     def getUserByCompletionLink(cls, completion_link):
-        user = sql.query(User).filter(User.completion_link == completion_link).first()
+        user = sql.session.query(User).filter(User.completion_link == completion_link).first()
         return user
 
     @classmethod
     def signin(cls, email, password):
-        user = sql.query(User).filter(User.email == email).filter(User.password == password).first()
+        user = sql.session.query(User).filter(User.email == email).filter(User.password == password).first()
         return user
 
     @classmethod
     def getContacts(cls, userId):
-        contacts = sql.query(User).from_statement(
+        contacts = sql.session.query(User).from_statement(
             text("SELECT users.* "
                  "FROM users "
                  "JOIN contacts "
@@ -81,7 +81,7 @@ class UserRepository(Repository):
 
     @classmethod
     def getReceivers(cls, videoMailId):
-        users = sql.query(User, text("receiver_type")).from_statement(
+        users = sql.session.query(User, text("receiver_type")).from_statement(
             text("SELECT users.*, sendings.receiver_type "
                  "FROM users "
                  "JOIN sendings "
@@ -93,7 +93,7 @@ class UserRepository(Repository):
 
     @classmethod
     def getSender(cls, videoMailId):
-        user = sql.query(User).from_statement(
+        user = sql.session.query(User).from_statement(
             text("SELECT users.* "
                  "FROM users "
                  "JOIN sendings "

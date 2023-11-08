@@ -1,7 +1,6 @@
-from fastapi import APIRouter
-from starlette.responses import FileResponse
+from flask import Blueprint
 
 from app.schema.schema import UserAuthSchema, UserRefreshSchema, UserCompleteSchema, UserSigninSchema
 from app.services.sending import SendingService
 
-sendingRouter = APIRouter()
+sendingRouter: Blueprint = Blueprint('SendingController', __name__, url_prefix="/sendings")

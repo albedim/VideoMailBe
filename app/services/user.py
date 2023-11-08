@@ -4,8 +4,7 @@ from datetime import timedelta
 
 import jwt
 import requests
-from google.oauth2 import id_token
-from starlette.responses import FileResponse
+from flask import send_file
 
 from app.configuration.config import sql
 from app.model.entity.user import User
@@ -76,8 +75,6 @@ class UserService:
             return createErrorResponse(UserNotFoundException)
         except Exception as exc:
             return createErrorResponse(GException(exc))
-        finally:
-            Repository.endTransactions()
 
     @classmethod
     def getUser(cls, userId):
@@ -90,8 +87,6 @@ class UserService:
             return createErrorResponse(UserNotFoundException)
         except Exception as exc:
             return createErrorResponse(GException(exc))
-        finally:
-            Repository.endTransactions()
 
     @classmethod
     def signin(cls, request):
@@ -115,8 +110,6 @@ class UserService:
             return createErrorResponse(UserNotCompletedException)
         except Exception as exc:
             return createErrorResponse(GException(exc))
-        finally:
-            Repository.endTransactions()
 
     @classmethod
     def completeUser(cls, request):
@@ -147,8 +140,6 @@ class UserService:
             return createErrorResponse(UnAuthorizedException)
         except Exception as exc:
             return createErrorResponse(GException(exc))
-        finally:
-            Repository.endTransactions()
 
     @classmethod
     def refreshToken(
@@ -176,22 +167,16 @@ class UserService:
             if user is None:
                 raise UserNotFoundException()
             if os.path.exists(user.profile_image_path):
-                return FileResponse(user.profile_image_path,
-                                    media_type='image/png')
+                return send_file("../" + user.profile_image_path)
             else:
                 return createErrorResponse(FileNotFoundException)
         except UserNotFoundException:
             return createErrorResponse(UserNotFoundException)
-        finally:
-            Repository.endTransactions()
 
     @classmethod
-    def sync(cls, token):
+    def sync(cls, tokenSub):
         try:
-            if not isTokenValid(token):
-                raise UnAuthorizedException()
-            tokenPayload = jwt.decode(token.get("Authorization").split(" ")[1], key="super-secret")
-            user = UserRepository.getUserById(tokenPayload['user_id'])
+            user = UserRepository.getUserById(tokenSub['user_id'])
             if user is None:
                 raise UserNotFoundException()
             return createSuccessResponse(True)
@@ -204,8 +189,6 @@ class UserService:
         except Exception as exc:
             print(exc)
             return createErrorResponse(GException(exc))
-        finally:
-            Repository.endTransactions()
 
     @classmethod
     def isReceiverOrSender(cls, userId, videoMailId):

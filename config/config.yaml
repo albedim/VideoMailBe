@@ -2,7 +2,7 @@
 datasources:
   - name: local
     user: root
-    password: videoMail2023!
+    password: ""
     host: localhost
     port: 3306
     db: videomail1

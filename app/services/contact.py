@@ -1,7 +1,5 @@
 import jwt
 import requests
-from google.oauth2 import id_token
-
 from app.configuration.config import sql
 from app.model.entity.user import User
 from app.model.repository.contact import ContactRepository
@@ -38,8 +36,6 @@ class ContactService:
             return createErrorResponse(UserNotFoundException)
         except Exception as exc:
             return createErrorResponse(GException(exc))
-        finally:
-            Repository.endTransactions()
 
     @classmethod
     def create(cls, request):
@@ -72,8 +68,6 @@ class ContactService:
         except Exception as exc:
             print(exc)
             return createErrorResponse(GException(exc))
-        finally:
-            Repository.endTransactions()
 
     @classmethod
     def remove(cls, user_id, contact_id):
@@ -89,5 +83,3 @@ class ContactService:
             return createErrorResponse(ContactNotFoundException)
         except Exception as exc:
             return createErrorResponse(GException(exc))
-        finally:
-            Repository.endTransactions()

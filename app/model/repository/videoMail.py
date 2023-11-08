@@ -1,6 +1,6 @@
 from sqlalchemy import text
 
-from app.configuration.config import Base, sql
+from app.configuration.config import sql
 from app.model.entity.user import User
 from app.model.entity.videoMail import VideoMail
 from app.model.repository.repo import Repository
@@ -17,7 +17,7 @@ class VideoMailRepository(Repository):
 
     @classmethod
     def getSentVideoMails(cls, userId):
-        videoMails = sql.query(VideoMail).from_statement(
+        videoMails = sql.session.query(VideoMail).from_statement(
             text("SELECT videoMails.* "
                  "FROM videoMails "
                  "JOIN sendings "
@@ -29,7 +29,7 @@ class VideoMailRepository(Repository):
 
     @classmethod
     def getVideoMails(cls, userId):
-        videoMails = sql.query(VideoMail).from_statement(
+        videoMails = sql.session.query(VideoMail).from_statement(
             text("SELECT videoMails.* "
                  "FROM videoMails "
                  "JOIN sendings "
@@ -41,7 +41,7 @@ class VideoMailRepository(Repository):
 
     @classmethod
     def getReceivedVideoMails(cls, userId):
-        videoMails = sql.query(VideoMail, User, text("favorite")).from_statement(
+        videoMails = sql.session.query(VideoMail, User, text("favorite")).from_statement(
             text("SELECT videoMails.*, users.*, sendings.favorite "
                  "FROM videoMails "
                  "JOIN sendings "
@@ -55,7 +55,7 @@ class VideoMailRepository(Repository):
 
     @classmethod
     def getFavoritedVideoMails(cls, userId):
-        videoMails = sql.query(VideoMail, User).from_statement(
+        videoMails = sql.session.query(VideoMail, User).from_statement(
             text("SELECT videoMails.*, users.*"
                  "FROM videoMails "
                  "JOIN sendings "
@@ -70,5 +70,5 @@ class VideoMailRepository(Repository):
 
     @classmethod
     def getVideoMail(cls, videoId):
-        videoMail = sql.query(VideoMail).filter(VideoMail.videoMail_id == videoId).first()
+        videoMail = sql.session.query(VideoMail).filter(VideoMail.videoMail_id == videoId).first()
         return videoMail

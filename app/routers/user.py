@@ -1,43 +1,43 @@
-from fastapi import APIRouter, Request
-from starlette.responses import FileResponse
+from flask import Blueprint, request
+from flask_jwt_extended import jwt_required, get_jwt_identity
 
-from app.configuration.config import authjwt
 from app.schema.schema import UserAuthSchema, UserRefreshSchema, UserCompleteSchema, UserSigninSchema, TokenData
 from app.services.user import UserService
 
-userRouter = APIRouter()
+userRouter: Blueprint = Blueprint('UserController', __name__, url_prefix="/users")
 
 
 @userRouter.post("/complete")
-async def complete(request: UserCompleteSchema):
-    return UserService.completeUser(request)
+def complete():
+    return UserService.completeUser(request.json)
 
 
 @userRouter.post("/signin")
-async def signin(request: UserSigninSchema):
-    return UserService.signin(request)
+def signin():
+    return UserService.signin(request.json)
 
 
 @userRouter.post("/auth")
-async def auth(request: UserAuthSchema):
-    return UserService.auth(request)
+def auth():
+    return UserService.auth(request.json)
 
 
-@userRouter.get("/{userId}/stats")
-async def getUserStats(userId: str):
+@userRouter.get("/<userId>/stats")
+def getUserStats(userId: str):
     return UserService.getUserStats(userId)
 
 
-@userRouter.get("/{userId}")
-async def getUser(userId: str):
+@userRouter.get("/<userId>")
+def getUser(userId: str):
     return UserService.getUser(userId)
 
 
-@userRouter.get("/{userId}/image")
-async def getUserImage(userId: str):
+@userRouter.get("/<userId>/image")
+def getUserImage(userId: str):
     return UserService.getUserImage(userId)
 
 
 @userRouter.post("/sync")
-async def sync(request: Request):
-    return UserService.sync(request.headers)
+@jwt_required()
+def sync():
+    return UserService.sync(get_jwt_identity())

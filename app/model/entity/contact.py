@@ -1,14 +1,14 @@
 import datetime
 
 from sqlalchemy import String, Column, Date, Boolean, ForeignKey
-from app.configuration.config import Base
+from app.configuration.config import sql
 from app.utils.utils import generateUuid
 
 
-class Contact(Base):
+class Contact(sql.Model):
     __tablename__ = 'contacts'
-    user_id: str = Column(String(8), ForeignKey("users.user_id"), primary_key=True, autoincrement=False)
-    contact_id: str = Column(String(8), ForeignKey("users.user_id"), primary_key=True, nullable=True)
+    user_id: str = sql.Column(sql.String(8), sql.ForeignKey("users.user_id"), primary_key=True, autoincrement=False)
+    contact_id: str = sql.Column(sql.String(8), sql.ForeignKey("users.user_id"), primary_key=True, nullable=True)
 
     def __init__(self, user_id, contact_id):
         self.user_id = user_id

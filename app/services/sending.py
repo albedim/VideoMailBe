@@ -5,8 +5,6 @@ import cv2
 import requests
 import base64
 
-from starlette.responses import FileResponse
-
 from app.model.repository.sending import SendingRepository
 from app.model.repository.user import UserRepository
 from app.schema.schema import EmailSentSchema

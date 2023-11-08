@@ -2,17 +2,17 @@ import datetime
 import enum
 
 from sqlalchemy import String, Column, Date, Boolean, Enum, ForeignKey
-from app.configuration.config import Base
+from app.configuration.config import sql
 from app.utils.utils import generateUuid
 
 
-class Sending(Base):
+class Sending(sql.Model):
     __tablename__ = 'sendings'
-    sender_id: int = Column(String(8), ForeignKey('users.user_id'), primary_key=True, autoincrement=False)
-    receiver_id: str = Column(String(8), ForeignKey('users.user_id'), primary_key=True, autoincrement=False)
-    favorite: bool = Column(Boolean, nullable=False)
-    videoMail_id: str = Column(String(8), ForeignKey('videoMails.videoMail_id'), primary_key=True, autoincrement=False)
-    receiver_type: enum = Column(Enum("a", "cc"), nullable=False)
+    sender_id: int = sql.Column(sql.String(8), sql.ForeignKey('users.user_id'), primary_key=True, autoincrement=False)
+    receiver_id: str = sql.Column(sql.String(8), sql.ForeignKey('users.user_id'), primary_key=True, autoincrement=False)
+    favorite: bool = sql.Column(sql.Boolean, nullable=False)
+    videoMail_id: str = sql.Column(sql.String(8), sql.ForeignKey('videoMails.videoMail_id'), primary_key=True, autoincrement=False)
+    receiver_type: enum = sql.Column(sql.Enum("a", "cc"), nullable=False)
 
     def __init__(self, receiver_type, sender_id, receiver_id, videoMail_id):
         self.receiver_type = receiver_type

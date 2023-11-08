@@ -1,17 +1,17 @@
 import datetime
 
 from sqlalchemy import String, Column, Date, Boolean, DateTime
-from app.configuration.config import Base
+from app.configuration.config import sql
 from app.utils.utils import generateUuid, BASE_URL
 
 
-class VideoMail(Base):
+class VideoMail(sql.Model):
     __tablename__ = 'videoMails'
-    videoMail_id: int = Column(String(8), primary_key=True, autoincrement=False)
-    subject: str = Column(String(34), nullable=False)
-    code: str = Column(String(4), nullable=False)
-    path: str = Column(String(54), nullable=False)
-    sent_on: datetime.datetime = Column(DateTime, nullable=False)
+    videoMail_id: int = sql.Column(sql.String(8), primary_key=True, autoincrement=False)
+    subject: str = sql.Column(sql.String(34), nullable=False)
+    code: str = sql.Column(sql.String(4), nullable=False)
+    path: str = sql.Column(sql.String(54), nullable=False)
+    sent_on: datetime.datetime = sql.Column(sql.DateTime, nullable=False)
 
     def __init__(self, subject, path):
         self.videoMail_id = generateUuid()

@@ -1,27 +1,24 @@
-from pydantic import BaseModel
-
-
-class UserAuthSchema(BaseModel):
+class UserAuthSchema():
     code: str
 
 
-class UserRefreshSchema(BaseModel):
+class UserRefreshSchema():
     refresh_token: str
 
 
-class ReceiverSchema(BaseModel):
+class ReceiverSchema():
     email: str
     type: str
 
 
-class EmailSentSchema(BaseModel):
+class EmailSentSchema():
     video: str
     receiver_emails: list[ReceiverSchema]
     user_id: str
     subject: str
 
 
-class UserCompleteSchema(BaseModel):
+class UserCompleteSchema():
     name: str
     surname: str
     profile_image: str
@@ -29,20 +26,20 @@ class UserCompleteSchema(BaseModel):
     completion_link: str
 
 
-class UserSigninSchema(BaseModel):
+class UserSigninSchema():
     email: str
     password: str
 
 
-class ContactCreateSchema(BaseModel):
+class ContactCreateSchema():
     user_id: str
     contact_email: str
 
 
-class TokenData(BaseModel):
+class TokenData():
     user_id: str
 
 
-class FavoriteVideoMailSchema(BaseModel):
+class FavoriteVideoMailSchema():
     user_id: str
     videoMail_id: str

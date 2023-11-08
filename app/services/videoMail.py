@@ -6,7 +6,7 @@ import jwt
 import requests
 import base64
 
-from starlette.responses import FileResponse
+from flask import send_file
 
 from app.configuration.config import sql
 from app.model.repository.repo import Repository
@@ -123,8 +123,7 @@ class VideoMailService:
             return createErrorResponse(EmailNotSentException)
         except Exception as exc:
             return createErrorResponse(GException(exc))
-        finally:
-            Repository.endTransactions()
+
 
     @classmethod
     def getSentVideoMails(cls, userId):
@@ -151,8 +150,7 @@ class VideoMailService:
             return createErrorResponse(UserNotFoundException)
         except Exception as exc:
             return createErrorResponse(GException(exc))
-        finally:
-            Repository.endTransactions()
+
 
     @classmethod
     def getReceivedVideoMails(cls, userId):
@@ -176,8 +174,7 @@ class VideoMailService:
             return createErrorResponse(UserNotFoundException)
         except Exception as exc:
             return createErrorResponse(GException(exc))
-        finally:
-            Repository.endTransactions()
+
     """
     :description: Crea una file response di un video
     :param videoName: str
@@ -190,14 +187,12 @@ class VideoMailService:
             videoMail = VideoMailRepository.getVideoMail(videoId)
 
             if videoMail is not None and os.path.exists(videoMail.path):
-                return FileResponse(videoMail.path,
-                                    media_type='video/webm')
+                return send_file("../" + videoMail.path)
             else:
                 return createErrorResponse(FileNotFoundException)
         except Exception as exc:
             return createErrorResponse(GException(exc))
-        finally:
-            Repository.endTransactions()
+
     """
     :description: Crea una file response della copertina di un video
     :param videoName: str
@@ -209,8 +204,7 @@ class VideoMailService:
         videoMail = VideoMailRepository.getVideoMail(videoId)
 
         if videoMail is not None and os.path.exists(videoMail.path.replace("videomails", "covers")):
-            return FileResponse(videoMail.path,
-                                media_type='image/png')
+            return send_file("../" + videoMail.path.replace("videomails", "covers"))
         else:
             return createErrorResponse(FileNotFoundException)
 
@@ -317,5 +311,3 @@ class VideoMailService:
         except Exception as exc:
             print(exc)
             return createErrorResponse(GException(exc))
-        finally:
-            Repository.endTransactions()

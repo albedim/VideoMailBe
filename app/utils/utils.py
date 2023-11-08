@@ -10,12 +10,7 @@ import yaml
 import string
 import random
 import uuid
-
-from fastapi.security import OAuth2PasswordBearer
-from moviepy.video.io.VideoFileClip import VideoFileClip
-from starlette.responses import JSONResponse
-from app.utils.errors.GException import GException
-from app.utils.errors.UnAuthotizedException import UnAuthorizedException
+from flask import jsonify
 
 
 def getConnectionParameters(datasource):
@@ -52,12 +47,12 @@ def hashString(password: str):
 
 
 def createSuccessResponse(param):
-    return {
+    return jsonify({
         "date": str(datetime.now()),
         "success": True,
         "param": param,
         "code": 200,
-    }
+    })
 
 
 def getClient():
@@ -78,7 +73,7 @@ def getFormattedDateTime():
 
 
 def createErrorResponse(error):
-    return JSONResponse({
+    return jsonify({
         "date": str(datetime.now()),
         "success": False,
         "error": {
@@ -86,7 +81,7 @@ def createErrorResponse(error):
             "path": error.__module__
         },
         "code": error.code,
-    }, error.code)
+    }), error.code
 
 
 def createJWTToken(data, expires_delta):
