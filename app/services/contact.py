@@ -1,9 +1,4 @@
-import jwt
-import requests
-from app.configuration.config import sql
-from app.model.entity.user import User
 from app.model.repository.contact import ContactRepository
-from app.model.repository.repo import Repository
 from app.model.repository.user import UserRepository
 from app.utils.errors.ContactAlreadyExistsException import ContactAlreadyExistsException
 from app.utils.errors.ContactNotFoundException import ContactNotFoundException
@@ -40,15 +35,15 @@ class ContactService:
     @classmethod
     def create(cls, request):
         try:
-            user = UserRepository.getUserById(request.user_id)
-            contactUser = UserRepository.getUserByEmail(request.contact_email)
+            user = UserRepository.getUserById(request['user_id'])
+            contactUser = UserRepository.getUserByEmail(request['contact_email'])
 
             if user is None:
                 raise UserNotFoundException()
             if not user.registered or not user.completed:
                 raise UnAuthorizedException()
             if contactUser is None:
-                contactUser = UserRepository.create(False, request.contact_email, None)
+                contactUser = UserRepository.create(False, request['contact_email'], None)
             else:
                 if contactUser.user_id == user.user_id:
                     raise UnAuthorizedException()
@@ -57,7 +52,7 @@ class ContactService:
             if contact is not None:
                 raise ContactAlreadyExistsException()
 
-            ContactRepository.create(request.user_id, contactUser.user_id)
+            ContactRepository.create(request['user_id'], contactUser.user_id)
             return cls.getContacts(user.user_id)
         except UserNotFoundException as exc:
             return createErrorResponse(UserNotFoundException)

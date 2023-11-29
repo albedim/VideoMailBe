@@ -5,6 +5,7 @@ from datetime import timedelta
 import jwt
 import requests
 from flask import send_file
+from flask_jwt_extended import create_access_token
 
 from app.configuration.config import sql
 from app.model.entity.user import User
@@ -34,7 +35,7 @@ class UserService:
         res = requests.post("https://oauth2.googleapis.com/token", json={
             "client_id": getClient()['client_id'],
             "client_secret": getClient()['client_secret'],
-            "code": request.code.replace("%", "/"),
+            "code": request['code'].replace("%", "/"),
             "grant_type": "authorization_code",
             "redirect_uri": "http://localhost:3000"
         }).json()
@@ -91,15 +92,15 @@ class UserService:
     @classmethod
     def signin(cls, request):
         try:
-            user = UserRepository.getUserByEmail(request.email)
+            user = UserRepository.getUserByEmail(request['email'])
 
             if user is None:
                 raise UserNotFoundException()
             if not user.completed:
                 raise UserNotCompletedException()
-            if user.password == hashString(request.password):
+            if user.password == hashString(request['password']):
                 return createSuccessResponse({
-                    'token': createJWTToken({'user_id': user.user_id, 'expires_in': 14}, timedelta(days=14))
+                    'token': create_access_token(identity={'user_id': user.user_id, 'expires_in': 14}, expires_delta=timedelta(days=14))
                 })
             else:
                 raise UserNotFoundException()
@@ -109,12 +110,13 @@ class UserService:
         except UserNotCompletedException as exc:
             return createErrorResponse(UserNotCompletedException)
         except Exception as exc:
+            print(exc)
             return createErrorResponse(GException(exc))
 
     @classmethod
     def completeUser(cls, request):
         try:
-            user = UserRepository.getUserByCompletionLink(request.completion_link)
+            user = UserRepository.getUserByCompletionLink(request['completion_link'])
 
             if user is None:
                 raise UserNotFoundException()
@@ -123,15 +125,15 @@ class UserService:
             if user.completed:
                 raise UserNotFoundException()
             profileImage = "files/profileimages/default.png"
-            if request.profile_image != "":
+            if request['profile_image'] != "":
                 imageName = getFormattedDateTime() + ".png"
                 profileImage = f"files/profileimages/{imageName}"
-                saveFile(request.profile_image, profileImage)
+                saveFile(request['profile_image'], profileImage)
 
-            user = UserRepository.completeUser(profileImage, request.name, request.surname,
-                                               hashString(request.password), user)
+            user = UserRepository.completeUser(profileImage, request['name'], request['surname'],
+                                               hashString(request['password']), user)
             return createSuccessResponse({
-                'token': createJWTToken({'user_id': user.user_id, 'expires_in': 14}, timedelta(days=14))
+                'token': create_access_token(identity={'user_id': user.user_id, 'expires_in': 14}, expires_delta=timedelta(days=14))
             })
 
         except UserNotFoundException as exc:
@@ -163,11 +165,10 @@ class UserService:
     def getUserImage(cls, userId):
         try:
             user = UserRepository.getUserById(userId)
-            print(user.toJSON())
             if user is None:
                 raise UserNotFoundException()
-            if os.path.exists(user.profile_image_path):
-                return send_file("../" + user.profile_image_path)
+            if os.path.exists(os.path.abspath(user.profile_image_path)):
+                return send_file(os.path.abspath(user.profile_image_path))
             else:
                 return createErrorResponse(FileNotFoundException)
         except UserNotFoundException:

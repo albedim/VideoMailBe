@@ -11,6 +11,7 @@ import string
 import random
 import uuid
 from flask import jsonify
+from flask_jwt_extended import decode_token
 
 
 def getConnectionParameters(datasource):
@@ -92,13 +93,9 @@ def createJWTToken(data, expires_delta):
     return encoded_jwt
 
 
-def isTokenValid(headers):
+def isTokenValid(token):
     try:
-        if headers.get("Authorization") is None:
-            return False
-        if 'Bearer' not in headers.get("Authorization"):
-            return False
-        tokenPayload = jwt.decode(headers.get("Authorization").split(" ")[1], key="super-secret")
+        tokenPayload = decode_token(token)
         return True
     except Exception:
         return False
@@ -120,4 +117,5 @@ def saveFile(base64Data, filePath):
         ...
 
 
+BASE_FE_URL = getVariables('local')['BASE_FE_URL']
 BASE_URL = getVariables('local')['BASE_URL']

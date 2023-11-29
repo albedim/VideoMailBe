@@ -6,7 +6,7 @@ from app.services.contact import ContactService
 contactRouter: Blueprint = Blueprint('ContactController', __name__, url_prefix="/contacts")
 
 
-@contactRouter.delete("/<userId>/{contactId}")
+@contactRouter.delete("/<userId>/<contactId>")
 def remove(userId: str, contactId: str):
     return ContactService.remove(userId, contactId)
 

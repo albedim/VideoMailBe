@@ -6,10 +6,10 @@ class Repository:
     @classmethod
     def commit(cls):
         try:
-            sql.commit()
+            sql.session.commit()
         except Exception as exc:
-            sql.rollback()
+            sql.session.rollback()
 
     @classmethod
     def endTransactions(cls):
-        sql.close()
+        sql.session.close()

@@ -11,7 +11,7 @@ class VideoMailRepository(Repository):
     @classmethod
     def create(cls, subject, path):
         videoMail: VideoMail = VideoMail(subject, path)
-        sql.add(videoMail)
+        sql.session.add(videoMail)
         cls.commit()
         return videoMail
 
@@ -23,7 +23,7 @@ class VideoMailRepository(Repository):
                  "JOIN sendings "
                  "ON videoMails.videoMail_id = sendings.videoMail_id "
                  "WHERE sendings.sender_id = :senderId "
-                 "ORDER BY videomails.sent_on DESC").params(senderId=userId)
+                 "ORDER BY videoMails.sent_on DESC").params(senderId=userId)
         ).all()
         return videoMails
 
@@ -49,7 +49,7 @@ class VideoMailRepository(Repository):
                  "JOIN users "
                  "ON sendings.sender_id = users.user_id "
                  "WHERE sendings.receiver_id = :senderId "
-                 "ORDER BY videomails.sent_on DESC").params(senderId=userId)
+                 "ORDER BY videoMails.sent_on, sendings.favorite ASC").params(senderId=userId)
         ).all()
         return videoMails
 
@@ -64,7 +64,7 @@ class VideoMailRepository(Repository):
                  "ON sendings.sender_id = users.user_id "
                  "WHERE sendings.receiver_id = :senderId "
                  "AND sendings.favorite = true "
-                 "ORDER BY videomails.sent_on DESC").params(senderId=userId)
+                 "ORDER BY videoMails.sent_on DESC").params(senderId=userId)
         ).all()
         return videoMails
 

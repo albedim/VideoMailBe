@@ -7,6 +7,7 @@ import requests
 import base64
 
 from flask import send_file
+from flask_jwt_extended import decode_token
 
 from app.configuration.config import sql
 from app.model.repository.repo import Repository
@@ -22,16 +23,16 @@ from app.utils.errors.UnAuthotizedException import UnAuthorizedException
 from app.utils.errors.UserNotFoundException import UserNotFoundException
 from app.utils.errors.VideoMailNotFoundException import VideoMailNotFoundException
 from app.utils.utils import createSuccessResponse, createErrorResponse, generateUuid, getFormattedDateTime, BASE_URL, \
-    isTokenValid, saveFile
+    isTokenValid, saveFile, BASE_FE_URL
 
 
 class VideoMailService:
 
     @classmethod
-    def sendMail(cls, request: EmailSentSchema):
+    def sendMail(cls, request):
 
         try:
-            user = UserRepository.getUserById(request.user_id)
+            user = UserRepository.getUserById(request['user_id'])
 
             if user is None:
                 raise UserNotFoundException()
@@ -40,9 +41,9 @@ class VideoMailService:
 
             videoName = getFormattedDateTime()
             videoPath = "files/videomails/" + videoName + ".webm"
-            saveFile(request.video, videoPath)
+            saveFile(request['video'], videoPath)
             # cls.extractVideoCover(videoPath, "")
-            videoMail = VideoMailRepository.create(request.subject, videoPath)
+            videoMail = VideoMailRepository.create(request['subject'], videoPath)
 
             html_content = '''
                 <html>
@@ -50,13 +51,13 @@ class VideoMailService:
                         <h1>VideoMail #'''+videoMail.videoMail_id+'''</h1>
                         <p>Ti è stato mandato un nuovo VideoMail da '''+ user.name + ' ' + user.surname+'''</p>
                         <video width="320" height="240" controls>
-                            <source src="http://localhost:8000/videoMails/videos/''' + videoMail.videoMail_id + '''" type="video/webm">
+                            <source src="'''+BASE_URL+'''/videoMails/videos/''' + videoMail.videoMail_id + '''" type="video/webm">
                             <div>
                                 <p>Il tuo client non è supportato, perciò dovrai scaricare l'app per vedere il VideoMail <br> 
                                 Ecco il pin di accesso nel caso ti dovesse essere richiesto</p>
                                 <h2>'''+videoMail.code+'''</h2>
-                                <a href="http://localhost:3000/videoMails/'''+videoMail.videoMail_id+'''">
-                                    <img src="http://localhost:8000/videoMails/covers/''' + videoMail.videoMail_id + '''">
+                                <a href="'''+BASE_FE_URL+'''/videoMails/'''+videoMail.videoMail_id+'''">
+                                    <img src="'''+BASE_URL+'''/videoMails/covers/''' + videoMail.videoMail_id + '''">
                                 </a>
                             </div>
                         </video>
@@ -65,13 +66,13 @@ class VideoMailService:
             '''
 
             receivers = []
-            for receiver in request.receiver_emails:
+            for receiver in request['receiver_emails']:
 
-                userReceiver = UserRepository.getUserByEmail(receiver.email)
+                userReceiver = UserRepository.getUserByEmail(receiver['email'])
                 if userReceiver is None:
-                    userReceiver = UserRepository.create(False, receiver.email, None)
+                    userReceiver = UserRepository.create(False, receiver['email'], None)
 
-                sending = SendingRepository.create(receiver.type, videoMail.videoMail_id, userReceiver.user_id, user.user_id)
+                sending = SendingRepository.create(receiver['type'], videoMail.videoMail_id, userReceiver.user_id, user.user_id)
                 encoded_mail = base64.urlsafe_b64encode(
                     bytes(
                         f"Content-Type: text/html; charset=\"UTF-8\"\n" +
@@ -79,7 +80,7 @@ class VideoMailService:
                         "Content-Transfer-Encoding: base64\n" +
                         "to: " + userReceiver.email + "\n" +
                         "from: " + user.email + "\n" +
-                        "subject: " + request.subject + "\n\n" +
+                        "subject: " + request['subject'] + "\n\n" +
                         f"{base64.b64encode(html_content.encode()).decode('utf-8')}", 'utf-8'
                     )
                 ).decode('utf-8')
@@ -101,7 +102,7 @@ class VideoMailService:
                 else:
                     SendingRepository.remove(sending)
 
-            if len(receivers) != len(request.receiver_emails):
+            if len(receivers) != len(request['receiver_emails']):
                 if len(receivers) > 0:
                     return createSuccessResponse({
                         'message': 'Email only sent to some of the receivers',
@@ -122,8 +123,8 @@ class VideoMailService:
         except EmailNotSentException as exc:
             return createErrorResponse(EmailNotSentException)
         except Exception as exc:
+            print(exc)
             return createErrorResponse(GException(exc))
-
 
     @classmethod
     def getSentVideoMails(cls, userId):
@@ -150,7 +151,6 @@ class VideoMailService:
             return createErrorResponse(UserNotFoundException)
         except Exception as exc:
             return createErrorResponse(GException(exc))
-
 
     @classmethod
     def getReceivedVideoMails(cls, userId):
@@ -186,8 +186,8 @@ class VideoMailService:
         try:
             videoMail = VideoMailRepository.getVideoMail(videoId)
 
-            if videoMail is not None and os.path.exists(videoMail.path):
-                return send_file("../" + videoMail.path)
+            if videoMail is not None and os.path.exists(os.path.abspath(videoMail.path)):
+                return send_file(os.path.abspath(videoMail.path))
             else:
                 return createErrorResponse(FileNotFoundException)
         except Exception as exc:
@@ -201,12 +201,15 @@ class VideoMailService:
 
     @classmethod
     def getCoverFile(cls, videoId):
-        videoMail = VideoMailRepository.getVideoMail(videoId)
+        try:
+            videoMail = VideoMailRepository.getVideoMail(videoId)
 
-        if videoMail is not None and os.path.exists(videoMail.path.replace("videomails", "covers")):
-            return send_file("../" + videoMail.path.replace("videomails", "covers"))
-        else:
-            return createErrorResponse(FileNotFoundException)
+            if videoMail is not None and os.path.exists(os.path.abspath(videoMail.path.replace("videomails", "covers").replace("webm", "png"))):
+                return send_file(os.path.abspath(videoMail.path.replace("videomails", "covers").replace("webm", "png")))
+            else:
+                return createErrorResponse(FileNotFoundException)
+        except Exception as exc:
+            return createErrorResponse(GException(exc))
 
     """
     :description: Estrae un frame da un video e lo salva come file jpeg
@@ -254,7 +257,7 @@ class VideoMailService:
         if videoMail is None:
             raise VideoMailNotFoundException()
 
-        if not isTokenValid(headers):
+        if not isTokenValid(headers.get("Authorization").split(" ")[1]):
             return createSuccessResponse({
                 'authorized': True,
                 'pin_required': True,
@@ -262,7 +265,7 @@ class VideoMailService:
                     path=f"{BASE_URL}/videoMails/videos/{videoMail.videoMail_id}")
             })
 
-        tokenPayload = jwt.decode(headers.get("Authorization").split(" ")[1], key="super-secret")
+        tokenPayload = decode_token(headers.get("Authorization").split(" ")[1])['sub']
         authorized = UserService.isReceiverOrSender(tokenPayload['user_id'], videoId)
         return createSuccessResponse({
             'authorized': authorized,
@@ -274,12 +277,12 @@ class VideoMailService:
     @classmethod
     def favourite(cls, request):
         try:
-            videoMail = VideoMailRepository.getVideoMail(request.videoMail_id)
+            videoMail = VideoMailRepository.getVideoMail(request['videoMail_id'])
 
             if videoMail is None:
                 raise VideoMailNotFoundException()
 
-            sending = SendingRepository.get(request.user_id, request.videoMail_id)
+            sending = SendingRepository.get(request['user_id'], request['videoMail_id'])
             SendingRepository.favorite(sending)
 
             return createSuccessResponse("Favorite")

@@ -12,7 +12,7 @@ class UserRepository(Repository):
     @classmethod
     def create(cls, registered, email, refreshToken):
         user: User = User(registered, email, refreshToken)
-        sql.add(user)
+        sql.session.add(user)
         cls.commit()
         return user
 

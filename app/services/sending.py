@@ -1,7 +1,5 @@
 import datetime
 import os.path
-
-import cv2
 import requests
 import base64
 
